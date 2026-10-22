@@ -1,22 +1,33 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Realmforge gallery</title>
-    <style>
-      html, body { margin: 0; height: 100%; background: #15161a; color: #e8e2d0; font: 14px system-ui, sans-serif; }
-      #app { display: grid; grid-template-columns: 260px 1fr; height: 100%; }
-      nav { overflow: auto; border-right: 1px solid #2a2c33; padding: 12px; }
-      nav h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #a99c78; margin: 16px 0 6px; }
-      nav a { display: block; color: inherit; text-decoration: none; padding: 4px 6px; border-radius: 4px; }
-      nav a.active, nav a:hover { background: #2a2c33; }
-      #stage { position: relative; }
-      canvas { display: block; width: 100%; height: 100%; }
-    </style>
-  </head>
-  <body>
-    <div id="app"><nav id="nav"></nav><div id="stage"></div></div>
-    <script type="module" src="./main.ts"></script>
-  </body>
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%23181d20%27/%3E%3Ctext x=%2710%27 y=%2730%27 fill=%27%23d4b77c%27 font-size=%2730%27 font-family=%27serif%27%3ER%3C/text%3E%3C/svg%3E" />
+  <meta name="theme-color" content="#181d20" /><title>Realmforge · Component atelier</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<div id="app">
+  <aside id="catalogue" aria-label="Component catalogue">
+    <a class="brand" href="#"><span class="brand-mark">R<span>✦</span></span><span>REALMFORGE<small>THE COMPONENT ATELIER</small></span></a>
+    <div class="catalogue-tools"><label class="search"><span>⌕</span><input id="search" type="search" placeholder="Find a component…" aria-label="Search components" /></label><a class="sheet-link" href="#qa">▦ &nbsp; Visual QA sheet <span id="count"></span></a></div>
+    <nav id="nav" aria-label="Stories"></nav>
+    <footer>PROCEDURAL · THREE.JS<br><span>Original geometry. Inspect every detail.</span></footer>
+  </aside>
+  <main id="workspace">
+    <header><button id="menu" class="icon-button" aria-label="Open catalogue" aria-expanded="false">☰</button><div><span class="eyebrow" id="category">COMPONENT STUDY</span><h1 id="title">Realmforge</h1></div><div class="header-actions"><button id="copy">Copy QA link</button><button id="reset" title="Reset camera and controls">Reset view</button></div></header>
+    <div id="view">
+      <div id="stage"><div class="stage-badge">R / <span id="story-index">01</span><span>ORBIT TO INSPECT</span></div><div id="stats" role="status"></div><div class="stage-hint">Drag to orbit <span>·</span> Scroll to zoom <span>·</span> Right-drag to pan</div></div>
+      <aside id="inspector" aria-label="View inspector">
+        <details open id="component-panel"><summary>Component controls</summary><div id="story-controls"></div><p id="description"></p></details>
+        <details open><summary>Stage & lighting</summary><div id="stage-controls"></div></details>
+        <div class="inspector-note"><span class="status-dot"></span> LIVE GEOMETRY<br><p>Changes live in the URL. Share a view to reproduce the same study.</p></div>
+      </aside>
+    </div>
+    <section id="qa-sheet" hidden aria-label="Visual QA sheet"><p id="qa-progress">Preparing thumbnails…</p><div id="qa-grid"></div></section>
+  </main>
+</div>
+<div id="toast" role="status" hidden></div>
+<script type="module" src="./main.ts"></script>
+</body>
 </html>

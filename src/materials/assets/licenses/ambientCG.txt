@@ -1,0 +1,10 @@
+ambientCG assets: Wood051, Paper001, Bricks052, Metal032
+Author: Lennart Demes (ambientCG)
+Original license declaration: https://docs.ambientcg.com/license/
+Verified 2026-10-12 against that declaration and each original asset page.
+
+All ambientCG assets are provided under the
+Creative Commons CC0 1.0 Universal License.
+
+Full license copied from the linked original legal text: CC0-1.0.txt
+https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt
