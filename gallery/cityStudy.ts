@@ -7,7 +7,7 @@ import KitPool from "../src/core/KitPool";
 import type { StoryInstance } from "./registry";
 
 /** Stable synthetic site: same recipe and dimensions, no map/streaming dependency. */
-export function cityStudy(id: string, lod = "mid", tier: "high" | "balanced" = "balanced"): StoryInstance {
+export function cityStudy(id: string, lod = "mid", tier: "high" | "balanced" = "balanced", streets = false): StoryInstance {
   const recipe = physicalRecipes.find(recipe => recipe.id === id);
   if (!recipe) throw new Error(`Unknown city recipe ${id}`);
   const material = new PhysicalMaterial();
@@ -29,5 +29,31 @@ export function cityStudy(id: string, lod = "mid", tier: "high" | "balanced" = "
   const rings = { near: lod === "near" ? 1e8 : 0, mid: lod === "far" ? 0 : 1e8, far: 1e8, hide: 1e9, triangles: 1e9 };
   const studyCamera = new THREE.PerspectiveCamera(35); studyCamera.position.set(0, 1, 0);
   city.update(studyCamera, rings, performance.now()); pool.flush();
-  return { object: pool.group, update: () => { material.setClock(performance.now()); }, dispose: () => { city.dispose(); pool.dispose(); } };
+  // Prefer a production street with nearby house fronts, away from the castle reserve.
+  let walkStart: NonNullable<StoryInstance["navigation"]>["walkStart"];
+  let score = Infinity;
+  const plan = city.plan, origin = city.origin ?? { x: 0, z: 0 };
+  if (plan) for (const street of plan.streets) for (let i=1;i<street.points.length;i++) {
+    const a=street.points[i-1], b=street.points[i], length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    if (length < 25) continue;
+    const x=(a[0]+b[0])/2,z=(a[1]+b[1])/2;
+    if (Math.hypot(origin.x+x/50,origin.z+z/50)<4) continue;
+    const nearest=plan.houses.reduce((best,house)=>Math.min(best,Math.hypot(house.x-x,house.z-z)),Infinity);
+    if (nearest<score && nearest>street.width/2) {
+      score=nearest;
+      walkStart={position:[origin.x+x/50,0.036,origin.z+z/50],target:[origin.x+(x+(b[0]-a[0])/length*50)/50,0.036,origin.z+(z+(b[1]-a[1])/length*50)/50]};
+    }
+  }
+  if (streets && plan) {
+    const vertices:number[]=[];
+    for(const street of plan.streets) for(let i=1;i<street.points.length;i++) {
+      const a=street.points[i-1],b=street.points[i],length=Math.hypot(b[0]-a[0],b[1]-a[1]); if(!length)continue;
+      const dx=(b[1]-a[1])/length*street.width/2,dz=-(b[0]-a[0])/length*street.width/2;
+      const point=(x:number,z:number)=>[origin.x+x/50,0.001,origin.z+z/50];
+      vertices.push(...point(a[0]-dx,a[1]-dz),...point(b[0]-dx,b[1]-dz),...point(b[0]+dx,b[1]+dz),...point(a[0]-dx,a[1]-dz),...point(b[0]+dx,b[1]+dz),...point(a[0]+dx,a[1]+dz));
+    }
+    const geometry=new THREE.BufferGeometry();geometry.setAttribute("position",new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();
+    const road=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:"#a99a7b",roughness:1,side:THREE.DoubleSide}));pool.group.add(road);
+  }
+  return { object: pool.group, navigation: { metresPerUnit:50, walkStart }, update: () => { material.setClock(performance.now()); }, dispose: () => { city.dispose(); pool.dispose(); } };
 }

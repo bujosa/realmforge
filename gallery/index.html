@@ -15,9 +15,9 @@
     <footer>PROCEDURAL · THREE.JS<br><span>Original geometry. Inspect every detail.</span></footer>
   </aside>
   <main id="workspace">
-    <header><button id="menu" class="icon-button" aria-label="Open catalogue" aria-expanded="false">☰</button><div><span class="eyebrow" id="category">COMPONENT STUDY</span><h1 id="title">Realmforge</h1></div><div class="header-actions"><button id="copy">Copy QA link</button><button id="reset" title="Reset camera and controls">Reset view</button></div></header>
+    <header><button id="menu" class="icon-button" aria-label="Open catalogue" aria-expanded="false">☰</button><div><span class="eyebrow" id="category">COMPONENT STUDY</span><h1 id="title">Realmforge</h1></div><div class="header-actions"><button id="copy">Copy QA link</button><select id="navigation" aria-label="Navigation mode"><option value="orbit">Orbit</option><option value="fly">Explore · fly (E)</option><option value="walk">Walk (G)</option></select><button id="reset" title="Reset camera and controls">Reset view</button></div></header>
     <div id="view">
-      <div id="stage"><div class="stage-badge">R / <span id="story-index">01</span><span>ORBIT TO INSPECT</span></div><div id="stats" role="status"></div><div class="stage-hint">Drag to orbit <span>·</span> Scroll to zoom <span>·</span> Right-drag to pan</div></div>
+      <div id="stage"><div class="stage-badge">R / <span id="story-index">01</span><span>ORBIT TO INSPECT</span></div><div id="story-overlay"></div><div id="story-hud"></div><div id="move-pad" aria-label="Touch movement" hidden><button data-move="0,1" aria-label="Move forward">↑</button><button data-move="-1,0" aria-label="Move left">←</button><button data-move="0,-1" aria-label="Move backward">↓</button><button data-move="1,0" aria-label="Move right">→</button></div><div id="stats" role="status"></div><div class="stage-hint">Drag to orbit <span>·</span> Scroll to zoom <span>·</span> Right-drag to pan</div></div>
       <aside id="inspector" aria-label="View inspector">
         <details open id="component-panel"><summary>Component controls</summary><div id="story-controls"></div><p id="description"></p></details>
         <details open><summary>Stage & lighting</summary><div id="stage-controls"></div></details>

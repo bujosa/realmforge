@@ -3,6 +3,8 @@ import * as THREE from "three";
 /** Include the city shader's per-instance roof pitch, which three.js CPU bounds cannot see. */
 export function visualBounds(object: THREE.Object3D): THREE.Box3 {
   object.updateMatrixWorld(true);
+  // Screen-space shader quads have no meaningful world bounds; the story supplies anchors.
+  if (object.userData.visualBounds instanceof THREE.Box3) return object.userData.visualBounds.clone().applyMatrix4(object.matrixWorld);
   const result = new THREE.Box3().setFromObject(object);
   const matrix = new THREE.Matrix4(), world = new THREE.Matrix4();
   object.traverse(child => {

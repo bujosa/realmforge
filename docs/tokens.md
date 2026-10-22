@@ -1,0 +1,5 @@
+# Strategic tokens
+
+`new TokenLayer()` creates the production screen-space order, power, garrison and loyalty batches. Add `group` to a scene. Each frame call `begin()`, then `add(TokenInput)` for every visible public token, then `end(camera, widthCssPx, heightCssPx, cameraDistance)`. Inputs include an ID, kind, scene position, host-owned face texture, rim color, opacity, scale/flip, highlight and picking eligibility. The host must filter hidden orders before supplying inputs.
+
+The layer keeps physical anchors while fixing visual diameter in CSS pixels; it separates overlapping faces and preserves the original depth-occluded ghost pass. Its CPU unit quad bounds do not describe rendered screen extents. Gallery framing therefore uses explicit anchor bounds. `TokenAtlas` packs only textures supplied by the host, with gutters and bounded growth; atlas ownership is separate from source texture ownership. Dispose the layer/atlas and source textures through their respective owners. The library bundles no order or power artwork. Its reference story uses newly drawn O/P/G/L letters.

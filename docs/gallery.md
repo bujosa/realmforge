@@ -7,3 +7,13 @@ Controls support `select`, `number`, `boolean` and `colour`, with labels and def
 The gallery owns returned object geometry/material disposal. A story's `dispose` hook releases external assets/listeners/pools. Shared story resources are disposed once per object traversal. Animation uses the single gallery loop; reduced-motion preference suppresses turntable. The QA sheet uses one renderer and an offscreen target sequentially, releases each story, and creates JPEG q72 thumbnails; click a card to return to its study.
 
 `window.__realmforge` is a deliberately small QA inspection surface: `stories()`, `stats()`, `ready()`, `values()` and projected `framing()`. It exposes no host secrets or game state.
+
+## Story UI slots
+
+`StoryContext.overlay` is the story's top-stage element and `StoryContext.hud` its lower-right diagnostics slot. Append story UI to these slots rather than `#stage` or `document.body`. The gallery clears both when disposing a story. The story must still remove external event listeners, styles and other resources in `dispose()`. Slots are detached during QA-sheet thumbnail builds, so UI does not leak into the gallery. Geometry must not depend on a slot being connected.
+
+A populated overlay hides the shared R / nn badge; a populated HUD hides shared stats. Scoped CSS keeps round-one army panels usable pending the supplied `armies-overlay.patch`; rf-kit does not change any army-owned source. Keep slot child panels in normal flow rather than positioning them relative to the whole stage. The patch includes the matching CSS updates.
+
+Navigation metadata, input behavior and limits are described in [Exploration](exploration.md). `window.__realmforge.navigation()` returns mode, speed, eye height, position and direction. `resetMetrics()` clears the frame-interval sample window; `metrics()` returns p50/p95 wall-clock intervals and current renderer counts. Intervals include scheduling/load and are distinct from CPU submission time. Screen-space shader stories may supply `object.userData.visualBounds` as a local `THREE.Box3` of their physical anchors plus margin; shader quads do not supply useful CPU bounds.
+
+Initial framing runs after the first story update as well as after asynchronous readiness. This gives the gallery the final framing decision when legacy stories initialize their own camera or animated bounds. Offscreen QA thumbnails apply the same rule. Subsequent user orbit/look input is preserved.
