@@ -1,10 +1,11 @@
 /* Explicit browser visual/performance evidence runner. Uses the existing game QA install. */
 const { chromium, webkit } = require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
 const fs = require('node:fs');
+const { withArmyServer } = require('./armies-server.cjs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const assert = require('node:assert/strict');
-const root = process.env.ARMY_EVIDENCE || path.join(process.env.HOME, '.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-armies');
+const root = process.env.ARMY_EVIDENCE || path.join(process.env.HOME, '.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-armies/r2');
 const url = process.env.ARMY_URL || 'http://127.0.0.1:5211/';
 const quick = process.argv.includes('--quick');
 const types = ['footman', 'knight', 'siege-engine', 'ship', 'dragon'];
@@ -12,6 +13,7 @@ const houses = ['greyjoy', 'stark', 'lannister', 'baratheon', 'tyrell', 'martell
 const states = ['idle', 'march', 'attack', 'charge', 'defend', 'rout', 'retreat', 'wounded', 'destroyed', 'victory'];
 const results = { timestamp: new Date().toISOString(), url, mode: quick ? 'quick' : 'full', engines: {}, contracts: {}, errors: [], warnings: [], load: [] };
 fs.mkdirSync(root, { recursive: true });
+fs.writeFileSync(path.join(root, 'qa-results.json'), JSON.stringify({timestamp: results.timestamp, status: 'running'}, null, 2));
 const out = relative => { const file = path.join(root, relative); fs.mkdirSync(path.dirname(file), { recursive: true }); return file; };
 const load = label => { const value = execFileSync('uptime', { encoding: 'utf8' }).trim(); results.load.push({ label, value }); console.log(label, value); };
 function observe(page, label) {
@@ -36,9 +38,17 @@ async function contracts(page) {
     const batch = new sample.constructor({ detail: 'balanced', capacityPerType: 3 });
     const near = (a, b) => Math.abs(a - b) < 0.0001;
     const checks = {};
+    let invalid = false; try { new sample.constructor({capacityPerType: 0}); } catch { invalid = true; } checks.invalidCapacity = invalid;
     const a = batch.add({ type: 'footman', color: '#202020', seed: 5 });
     const b = batch.add({ type: 'footman', color: '#dddddd', seed: 5 });
     const c = batch.add({ type: 'footman', color: '#ae2927', seed: 6 });
+    const Box = a.pool.mesh.geometry.boundingBox.constructor;
+    new Box().setFromObject(batch.object);
+    for (const u of batch.units) u.position.x = 100;
+    batch.update(0);
+    checks.movingBounds = new Box().setFromObject(batch.object).min.x > 90;
+    for (const u of batch.units) u.position.x = 0;
+    batch.update(0);
     let overflow = false;
     try { batch.add({ type: 'footman', color: '#000' }); } catch { overflow = true; }
     checks.capacity = overflow;
@@ -51,9 +61,29 @@ async function contracts(page) {
     checks.pause = near(batch.time, time) && frozen.every((v, i) => near(v, a.weights[i]));
     batch.setPaused(false); batch.setMotionScale(0); a.setState('march', { path: [{ x: 0, z: 0 }, { x: 3, z: 2 }], duration: 10 }); batch.update(0.1);
     checks.reducedMotion = near(a.position.x, 3) && near(a.position.z, 2) && near(a.weights[0], 1);
+    batch.setMotionScale(1); batch.update(.01);
+    checks.resumeKeepsEndpoint = near(a.position.x, 3) && near(a.position.z, 2) && near(a.weights[0], 1);
+    a.setState('destroyed'); for(let i=0;i<5;i++) batch.update(.1);
+    const death = a.deathProgress; a.setState('idle'); batch.update(.01);
+    checks.deathTransition = a.deathProgress > 0 && a.deathProgress <= death;
+    batch.setMotionScale(0); a.setState('destroyed'); batch.update(.1);
+    batch.setMotionScale(1); batch.update(.01); checks.reducedDeathStaysDestroyed = near(a.deathProgress, 1);
+    a.setState('idle', {transition: 0}); batch.update(0);
     b.remove(); checks.compaction = c.slot === 1 && c.pool.units[c.slot] === c && batch.units.length === 2;
     const d = batch.add({ type: 'footman', color: '#777', seed: 5 }); checks.reuse = batch.units.length === 3 && d.slot === 2;
     checks.seedDeterminism = a.seed === d.seed;
+    batch.setMotionScale(1); const beforeNaN = batch.time; batch.update(NaN); checks.finiteClock = batch.time === beforeNaN;
+    batch.setMotionScale(.5); batch.update(.1); checks.speedClock = near(batch.time - beforeNaN, .05);
+    batch.setMotionScale(0); const zero = batch.time; batch.update(.1); checks.zeroClock = batch.time === zero;
+    const camera = window.__armyQA.camera, saved = camera.position.clone();
+    camera.position.set(0, 500, 0); camera.updateMatrixWorld(true); batch.update(0, camera);
+    checks.farLOD = a.pool.far && batch.stats.draws === 2;
+    camera.position.set(0, 2, 2); camera.updateMatrixWorld(true); batch.update(0, camera);
+    checks.nearLOD = !a.pool.far && batch.stats.draws <= 4;
+    a.lod = 'far'; batch.update(0, camera); checks.pinnedFarLOD = a.pool.far;
+    a.lod = 'near'; batch.update(0, camera); checks.pinnedNearLOD = !a.pool.far;
+    a.setState('defend', {transition: 0}); batch.update(0); checks.instantTransition = near(a.weights[3], 1);
+    camera.position.copy(saved); camera.updateMatrixWorld(true);
     batch.dispose(); batch.dispose();
     checks.dispose = batch.units.length === 0 && a.removed && c.removed && d.removed && batch.object.children.length === 0;
     let rejected = false; try { batch.add({ type: 'ship', color: '#fff' }); } catch { rejected = true; } checks.disposedGuard = rejected;
@@ -70,20 +100,20 @@ async function performanceRun(page, engine, viewport, story) {
   const detail = story.endsWith('balanced') ? 'balanced' : 'high';
   metrics.geometryPass = metrics.draws <= (detail === 'high' ? 40 : 20) && metrics.triangles <= (detail === 'high' ? 400000 : 160000);
   metrics.programPass = metrics.latePrograms === 0;
+  if (metrics.webglError !== 0) results.errors.push({label: `${engine}/${viewport}/${story}`, type: "webgl", message: String(metrics.webglError)});
   metrics.framePass = metrics.frameP95 <= 16.7;
   console.log(engine, viewport, detail, JSON.stringify(metrics));
   return metrics;
 }
 async function video(browser, engine, viewportName, viewport, story) {
-  const tempDir = out(`videos/${engine}-${viewportName}-${story.split('/')[1]}`);
-  fs.mkdirSync(tempDir, { recursive: true });
+  const tempDir = fs.mkdtempSync(out(`videos/${engine}-${viewportName}-${story.split('/')[1]}-`));
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1, recordVideo: { dir: tempDir, size: viewport } });
   const page = await context.newPage(); observe(page, `${engine}/${viewportName}/video/${story}`);
   await navigate(page, story);
   if (story.endsWith('state-player')) {
-    for (const state of ['idle', 'march', 'charge', 'defend', 'wounded', 'victory']) {
+    for (const state of states) {
       await page.getByLabel('State', { exact: true }).selectOption(state);
-      await page.waitForTimeout(1600);
+      await page.waitForTimeout(1100);
     }
   } else await page.waitForTimeout(11000);
   const recording = page.video(); await context.close();
@@ -95,6 +125,8 @@ async function contactSheets(browser) {
   const context = await browser.newContext({ viewport: { width: 1100, height: 900 }, deviceScaleFactor: 1 });
   const page = await context.newPage(); observe(page, 'chrome/contact-sheets');
   await navigate(page, 'armies/state-player');
+  const stage = await page.locator('#stage').boundingBox();
+  const crop = {x: stage.x + stage.width * .06, y: stage.y + stage.height * .12, width: stage.width * .88, height: stage.height * .72};
   const all = {};
   for (const type of types) {
     const cells = [];
@@ -104,9 +136,9 @@ async function contactSheets(browser) {
         for (let i = 0; i < (state === 'destroyed' ? 5 : 4); i++) qa.batch.update(0.1);
         qa.batch.setPaused(true);
       }, { type, house, state });
-      await page.waitForTimeout(35);
+      await page.waitForTimeout(50);
       const file = `states/${type}-${house}-${state}.jpg`;
-      await screenshot(page, file, { x: 420, y: 225, width: 470, height: 480 });
+      await screenshot(page, file, crop);
       cells.push({ house, state, src: `data:image/jpeg;base64,${fs.readFileSync(out(file)).toString('base64')}` });
     }
     all[type] = cells;
@@ -133,13 +165,15 @@ async function contactSheets(browser) {
   await screenshot(sheet,'contact-before-after.jpg');
   await sheet.close();
 }
-(async () => {
+let activeBrowser;
+withArmyServer(url, async () => {
+ try {
   load('start');
   for (const [engine, launch] of [
     ['chrome', () => chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] })],
     ['webkit', () => webkit.launch({ headless: true })],
   ]) {
-    const browser = await launch(); results.engines[engine] = { version: browser.version(), views: {}, perf: {}, baseline: {} };
+    const browser = activeBrowser = await launch(); results.engines[engine] = { version: browser.version(), views: {}, perf: {}, baseline: {} };
     for (const [viewportName, viewport] of [['desktop', { width: 1440, height: 900 }], ['phone', { width: 390, height: 844 }]]) {
       const context = await browser.newContext({ viewport, deviceScaleFactor: 1 });
       const page = await context.newPage(); observe(page, `${engine}/${viewportName}`);
@@ -148,16 +182,16 @@ async function contactSheets(browser) {
         results.contracts[engine] = await contracts(page);
         for (const [name, passed] of Object.entries(results.contracts[engine])) assert.equal(passed, true, `${engine} contract: ${name}`);
       }
-      const stories = await page.locator('#nav a').evaluateAll(links => links.map(a => a.dataset.id));
+      const stories = await page.locator('#nav a').evaluateAll(links => links.map(a => a.dataset.id).filter(id => id.startsWith('armies/')));
       const metrics = {};
       for (const story of stories) {
         await navigate(page, story);
         await screenshot(page, `screenshots/${engine}-${viewportName}-${story.replaceAll('/', '-')}.jpg`);
-        if (story.startsWith('armies/')) metrics[story] = await page.evaluate(() => window.__armyQA.metrics());
-        if (!quick && viewportName === 'phone' && /armies\/.+-(near|far)$/.test(story)) {
+        if (story.startsWith('armies/')) metrics[story] = await page.evaluate(() => ({...window.__armyQA.metrics(), pixelBounds: window.__armyQA.pixelBounds?.()}));
+        if (!quick && /armies\/.+-(near|far)$/.test(story)) {
           for (const house of houses) {
             await page.getByLabel('House', { exact: true }).selectOption(house);
-            await page.waitForTimeout(100);
+            await page.waitForTimeout(450);
             await screenshot(page, `screenshots/${engine}-${viewportName}-${story.replaceAll('/', '-')}-${house}.jpg`);
           }
         }
@@ -185,7 +219,7 @@ async function contactSheets(browser) {
       if (!quick) for (const story of ['armies/state-player', 'armies/battle']) await video(browser, engine, viewportName, viewport, story);
     }
     if (engine === 'chrome' && !quick) await contactSheets(browser);
-    await browser.close();
+    await browser.close(); activeBrowser = undefined;
   }
   load('finish');
   const perfs = Object.values(results.engines).flatMap(e => Object.values(e.perf).flatMap(v => Object.values(v)));
@@ -193,4 +227,5 @@ async function contactSheets(browser) {
   fs.writeFileSync(out('qa-results.json'), JSON.stringify(results, null, 2) + '\n');
   console.log(JSON.stringify({ verdict: results.verdict, errors: results.errors, contracts: results.contracts, output: root }, null, 2));
   if (results.verdict !== 'GO') process.exitCode = 1;
-})().catch(error => { results.failure = error.stack; fs.writeFileSync(out('qa-results.json'), JSON.stringify(results, null, 2)); console.error(error); process.exitCode = 1; });
+ } finally { await activeBrowser?.close(); }
+}).catch(error => { results.failure = error.stack; fs.writeFileSync(out('qa-results.json'), JSON.stringify(results, null, 2)); console.error(error); process.exitCode = 1; });

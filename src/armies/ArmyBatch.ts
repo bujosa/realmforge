@@ -45,9 +45,10 @@ class Pool {
     this.mesh.instanceColor!.needsUpdate = true;
     this.a.needsUpdate = this.b.needsUpdate = this.meta.needsUpdate = this.params.needsUpdate = true;
     this.mesh.count = this.contact.count = this.units.length;
-    this.mesh.boundingBox = null; this.mesh.boundingSphere = null;
+    this.mesh.boundingBox = this.contact.boundingBox = null;
+    this.mesh.boundingSphere = this.contact.boundingSphere = null;
   }
-  dispose(): void { this.mesh.geometry.dispose(); this.contact.geometry.dispose(); this.mesh.dispose(); this.contact.dispose(); }
+  dispose(): void { this.units.length = 0; this.mesh.count = this.contact.count = 0; this.mesh.geometry.dispose(); this.contact.geometry.dispose(); this.mesh.dispose(); this.contact.dispose(); }
 }
 
 /** A lightweight company handle; transforms are in batch-local coordinates. */
@@ -58,7 +59,7 @@ export class ArmyUnit {
   readonly seed: number;
   readonly tile: number;
   readonly plinth: boolean;
-  readonly lod: "auto" | "near" | "far";
+  lod: "auto" | "near" | "far";
   readonly weights = new Float32Array(stateCount);
   readonly from = new Float32Array(stateCount);
   readonly target = new Float32Array(stateCount);
@@ -71,6 +72,7 @@ export class ArmyUnit {
   pool!: Pool;
   removed = false;
   deathProgress = 0;
+  deathFrom = 0;
   transitionStart = 0;
   transitionDuration = 0.3;
   stateStart = 0;
@@ -93,6 +95,7 @@ export class ArmyUnit {
   setState(state: ArmyState, options: ArmyStateOptions = {}): this {
     if (this.removed) return this;
     if (!(state === "idle" || state in weightIndex)) throw new Error(`Unknown army state: ${state}`);
+    this.deathFrom = this.deathProgress;
     this.state = state; this.stateStart = this.batch.time;
     this.from.set(this.weights); this.target.fill(0);
     const index = weightIndex[state];
@@ -114,6 +117,7 @@ export class ArmyUnit {
       this.pathStart = this.batch.time; this.pathDuration = Math.max(0.001, options.duration ?? 1.8);
     }
     if (this.batch.motionScale === 0 || this.transitionDuration === 0) this.weights.set(this.target);
+    if (this.batch.motionScale === 0) this.from.set(this.target);
     return this;
   }
   setWounded(value: boolean): this { this.wounded = value; return this; }
@@ -199,6 +203,8 @@ export class ArmyBatch {
     const pool = unit.pool, last = pool.units.pop();
     if (last && last !== unit) { pool.units[unit.slot] = last; last.slot = unit.slot; this.write(last); }
     pool.mesh.count = pool.contact.count = pool.units.length;
+    pool.mesh.boundingBox = pool.contact.boundingBox = null;
+    pool.mesh.boundingSphere = pool.contact.boundingSphere = null;
   }
   private write(unit: ArmyUnit): void {
     this.quaternion.setFromAxisAngle(this.axis, unit.heading + (unit.pathReverse && !unit.path ? Math.PI * unit.weights[4] : 0));
@@ -208,15 +214,15 @@ export class ArmyBatch {
   }
   setMotionScale(value: number): void {
     this.motionScale = Math.max(0, Math.min(2, Number.isFinite(value) ? value : 0));
-    this.uniforms.motion.value = this.motionScale;
-    if (!this.motionScale) for (const unit of this.units) unit.weights.set(unit.target);
+    this.uniforms.motion.value = this.motionScale > 0 ? 1 : 0;
+    if (!this.motionScale) for (const unit of this.units) { unit.weights.set(unit.target); unit.from.set(unit.target); }
   }
   setPaused(value: boolean): void { this.paused = value; }
   /** Explicit clock; no RAF/timers. Optional camera chooses LOD with hysteresis. */
   update(deltaSeconds: number, camera?: THREE.PerspectiveCamera): void {
     if (this.disposed || this.paused) return;
-    const delta = Math.min(0.1, Math.max(0, deltaSeconds));
-    this.time += delta;
+    const delta = Number.isFinite(deltaSeconds) ? Math.min(0.1, Math.max(0, deltaSeconds)) : 0;
+    this.time += delta * this.motionScale;
     this.uniforms.time.value = this.time;
     if (camera) {
       this.object.updateWorldMatrix(true, false);
@@ -225,10 +231,19 @@ export class ArmyBatch {
     }
     for (let u = 0; u < this.units.length; u++) {
       const unit = this.units[u];
-      const linear = this.motionScale === 0 ? 1 : Math.min(1, (this.time - unit.transitionStart) / Math.max(0.001, unit.transitionDuration));
+      const linear = this.motionScale === 0 || unit.transitionDuration === 0 ? 1 : Math.min(1, (this.time - unit.transitionStart) / Math.max(0.001, unit.transitionDuration));
       const blend = linear * linear * (3 - 2 * linear);
       for (let i = 0; i < stateCount; i++) unit.weights[i] = unit.from[i] + (unit.target[i] - unit.from[i]) * blend;
-      unit.deathProgress = unit.state === "destroyed" ? this.motionScale === 0 ? 1 : Math.min(1, (this.time - unit.stateStart) / 1.4) : 0;
+      unit.deathProgress = unit.state === "destroyed"
+        ? this.motionScale === 0 ? 1 : unit.deathFrom + (1 - unit.deathFrom) * Math.min(1, (this.time - unit.stateStart) / 1.4)
+        : unit.deathFrom * (1 - blend);
+      // Settle reduced-motion cues permanently: re-enabling motion must not
+      // rewind a completed path, resurrect a faded unit or replay a transition.
+      if (this.motionScale === 0) {
+        unit.from.set(unit.target); unit.deathFrom = unit.deathProgress;
+        unit.stateStart = this.time - 1.4;
+        if (unit.path) unit.pathStart = this.time - unit.pathDuration;
+      }
       if (unit.path && unit.pathLengths) {
         const progress = this.motionScale === 0 ? 1 : Math.min(1, (this.time - unit.pathStart) / unit.pathDuration);
         const distance = progress * unit.pathLength;
@@ -241,15 +256,15 @@ export class ArmyBatch {
         if (length) {
           const target = Math.atan2(-(b.x - a.x), -(b.z - a.z));
           const difference = Math.atan2(Math.sin(target - unit.heading), Math.cos(target - unit.heading));
-          unit.heading += difference * (this.motionScale === 0 ? 1 : Math.min(1, delta * 14));
+          unit.heading += difference * (this.motionScale === 0 ? 1 : Math.min(1, delta * this.motionScale * 14));
         }
       }
-      if (camera && unit.lod === "auto") {
+      if (camera || unit.lod !== "auto") {
         this.unitWorld.copy(unit.position).applyMatrix4(this.object.matrixWorld);
         const d = Math.sqrt(this.cameraPosition.distanceToSquared(this.unitWorld));
-        const apparent = unit.scale * Math.max(this.worldScale.x, this.worldScale.z) * radius[unit.type] * 2 * camera.zoom / Math.max(0.01, d * 2 * Math.tan(camera.fov * Math.PI / 360));
+        const apparent = unit.scale * Math.max(this.worldScale.x, this.worldScale.z) * radius[unit.type] * 2 * (camera?.zoom ?? 1) / Math.max(0.01, d * 2 * Math.tan((camera?.fov ?? 38) * Math.PI / 360));
         const pair = this.pools.get(unit.type)!;
-        const far = this.detail === "low" || (unit.pool.far ? apparent < 0.105 : apparent < 0.075);
+        const far = this.detail === "low" || unit.lod === "far" || (unit.lod === "auto" && (unit.pool.far ? apparent < 0.105 : apparent < 0.075));
         const pool = pair[far ? 1 : 0];
         if (pool !== unit.pool) { this.detach(unit); unit.pool = pool; unit.slot = pool.units.length; pool.units.push(unit); }
       }

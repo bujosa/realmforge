@@ -4,7 +4,7 @@ import type { ArmyDetail, ArmyType } from "./types";
 
 type V = [number, number, number];
 export const PART = { body: 0, leftLeg: 1, rightLeg: 2, weapon: 3, shield: 4, cloth: 5, head: 6, tail: 7, arm: 8, oar: 9, leftWing: 10, rightWing: 11, dust: 12, plinth: 13 } as const;
-const steel = "#abb5ba", leather = "#352c28", wood = "#715138", skin = "#bf9677", linen = "#e9dfbf";
+const steel = "#697d88", leather = "#352c28", wood = "#715138", skin = "#bf9677", linen = "#e9dfbf";
 
 /** One merged, vertex-painted company. Part pivots and soldier roots survive merging. */
 export function armyGeometry(type: ArmyType, detail: ArmyDetail, far = false): THREE.BufferGeometry {
@@ -51,18 +51,18 @@ export function armyGeometry(type: ArmyType, detail: ArmyDetail, far = false): T
   };
   const shield = (at: V): void => {
     const outline = new THREE.Shape();
-    outline.moveTo(-0.055, 0.07); outline.lineTo(0.055, 0.07); outline.lineTo(0.048, -0.025); outline.lineTo(0, -0.085); outline.lineTo(-0.048, -0.025); outline.closePath();
+    outline.moveTo(-0.064, 0.08); outline.lineTo(0.064, 0.08); outline.lineTo(0.056, -0.028); outline.lineTo(0, -0.098); outline.lineTo(-0.056, -0.028); outline.closePath();
     const outer = new THREE.ShapeGeometry(outline);
     // A convex heater shield, rather than a rectangular block.
     const p = outer.getAttribute("position"), u = outer.getAttribute("uv");
-    for (let i = 0; i < p.count; i++) { u.setXY(i, (p.getX(i) + 0.055) / 0.11, (p.getY(i) + 0.085) / 0.155); p.setZ(i, 0.014 * (1 - Math.abs(p.getX(i)) / 0.055)); }
-    add(outer.clone().scale(1.12, 1.1, 1).translate(at[0], at[1], at[2] + 0.004), "#ffffff", 2, PART.shield, at);
+    for (let i = 0; i < p.count; i++) { u.setXY(i, (p.getX(i) + 0.064) / 0.128, (p.getY(i) + 0.098) / 0.178); p.setZ(i, 0.014 * (1 - Math.abs(p.getX(i)) / 0.064)); }
+    add(outer.clone().scale(1.24, 1.18, 1).translate(at[0], at[1], at[2] + 0.004), "#ffffff", 2, PART.shield, at);
     add(outer.rotateY(Math.PI).translate(...at), "#ffffff", 1, PART.shield, at, true);
   };
   const standard = (at: V, top: number): void => {
     beam(at, [at[0], top, at[2]], 0.008, wood);
     cone(0.018, 0.045, [at[0], top + 0.015, at[2]], "#ffffff", 2);
-    cloth(0.33, 0.34, [at[0] + 0.17, top - 0.19, at[2]], PART.cloth, [at[0], top - 0.19, at[2]]);
+    cloth(0.52, 0.45, [at[0] + 0.265, top - 0.245, at[2]], PART.cloth, [at[0], top - 0.19, at[2]]);
   };
   const person = (at: V, index: number, bearer = false, captain = false, mounted = false, size = 1): void => {
     root = at; phase = index * 2.39996;
@@ -78,9 +78,13 @@ export function armyGeometry(type: ArmyType, detail: ArmyDetail, far = false): T
       beam(start, knee, 0.021, leather, 0, id, start);
       if (!low) beam(knee, foot, 0.016, steel, 0, id, start);
       else beam(knee, foot, 0.013, leather, 0, id, start);
-      if (!low) box([0.032, 0.029, 0.068], [foot[0], foot[1] - 0.01, foot[2] - 0.016], leather, 0, id, start);
+      if (high) box([0.032, 0.029, 0.068], [foot[0], foot[1] - 0.01, foot[2] - 0.016], leather, 0, id, start);
     }
-    add(new THREE.CylinderGeometry(0.046, 0.065, 0.16, sides, 1, true).scale(1, 1, 0.68).translate(0, hip + 0.07, 0), "#ffffff", 1);
+    add(new THREE.CylinderGeometry(0.049, 0.069, 0.185, sides, 1, true).scale(1, 1, 0.78).translate(0, hip + 0.065, 0), "#ffffff", 1);
+    // A broad surcoat, including the shoulders, reads as cloth from overhead.
+    box([0.127, 0.018, 0.094], [0, hip + 0.141, 0], "#ffffff", 2);
+    box([0.102, 0.024, 0.079], [0, hip + 0.15, 0], "#ffffff", 1);
+    box([0.133, 0.012, 0.101], [0, hip - 0.025, 0], "#ffffff", 2);
     if (!low) {
       box([0.112, 0.017, 0.07], [0, hip + 0.04, 0], leather);
       box([0.019, 0.022, 0.075], [0, hip + 0.04, -0.002], "#ffffff", 2);
@@ -130,15 +134,16 @@ export function armyGeometry(type: ArmyType, detail: ArmyDetail, far = false): T
           const id = (s * end > 0) ? PART.leftLeg : PART.rightLeg;
           beam(p, [s * 0.076, 0.16, end * 0.17], 0.022, coat, 0, id, p);
           beam([s * 0.076, 0.16, end * 0.17], [s * 0.077, 0.035, end * 0.18], 0.015, leather, 0, id, p);
-          if (!low) box([0.035, 0.035, 0.06], [s * 0.077, 0.023, end * 0.18 - 0.012], leather, 0, id, p);
+          if (high) box([0.035, 0.035, 0.06], [s * 0.077, 0.023, end * 0.18 - 0.012], leather, 0, id, p);
         }
         // Caparison drapes over the flanks; contrasting hem remains visible on dark houses.
-        box([0.013, 0.18, 0.30], [s * 0.106, 0.32, 0.045], "#ffffff", 1);
-        box([0.017, 0.017, 0.31], [s * 0.106, 0.225, 0.045], "#ffffff", 2);
+        box([0.016, 0.21, 0.34], [s * 0.106, 0.32, 0.045], "#ffffff", 1);
+        box([0.020, 0.017, 0.35], [s * 0.106, 0.225, 0.045], "#ffffff", 2);
       }
       beam([0, 0.43, -0.2], [0, 0.58, -0.27], 0.018, leather, 0, PART.head, [0, 0.39, -0.17]);
       beam([0, 0.36, 0.2], [0, 0.12, 0.34], 0.024, leather, 0, PART.tail, [0, 0.36, 0.2]);
-      box([0.15, 0.035, 0.16], [0, 0.468, 0.025], leather);
+      box([0.22, 0.025, 0.33], [0, 0.451, 0.045], "#ffffff", 1);
+      box([0.15, 0.035, 0.16], [0, 0.478, 0.025], leather);
       root = [0, 0, 0];
       person([x, 0.43, z], i, i === 2, i === 0, true, 0.9);
       if (i === 2) standard([x + 0.08, 0.48, z], 1.38);
