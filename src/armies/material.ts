@@ -28,9 +28,12 @@ void armyPose(inout vec3 p, inout vec3 n) {
   float rout=poseB.x, wound=max(poseB.y,meta.z), death=poseB.z, victory=poseB.w;
   float gait=march+charge+rout;
   float seed=soldier.w+meta.y*0.71;
-  float t=armyTime*armyMotion;
-  float cycle=t*(7.+charge*5.+rout*4.)+seed;
-  float stride=sin(cycle)*armyMotion;
+  float t=armyTime;
+  float cycle=t*7.+seed;
+  // Blend fixed-frequency cycles rather than multiplying time by a changing
+  // transition weight (which would jump phase after long-running sessions).
+  float stride=mix(sin(cycle),sin(t*12.+seed),charge);
+  stride=mix(stride,sin(t*11.+seed),rout)*armyMotion;
   float hurt=step(0.46,fract(sin(seed*13.1)*437.5))*wound;
   float part=army.x;
   float angle=0.; mat3 r=mat3(1.);
@@ -119,7 +122,9 @@ export function armyMaterial(uniforms: ArmyUniforms): THREE.MeshStandardMaterial
     shader.fragmentShader = shader.fragmentShader.replace("#include <color_fragment>", /* glsl */ `
       #include <color_fragment>
       float paint=vArmyMark.z;
+      // Preserve saturated cloth under the gallery's high-intensity key light.
       diffuseColor.rgb*=paint>1.5?vArmyTrim:mix(vec3(1.),vArmyTint,paint);
+      if(paint>.5 && paint<1.5) diffuseColor.rgb*=.76;
       if(vArmyMark.x>=0.) {
         vec2 uv=vArmyMark.xy;
         if(!gl_FrontFacing) uv.x=1.-uv.x;
@@ -129,6 +134,9 @@ export function armyMaterial(uniforms: ArmyUniforms): THREE.MeshStandardMaterial
         float lum=dot(vArmyTint,vec3(.2126,.7152,.0722));
         vec3 ink=lum>0.35?vec3(.035,.045,.055):vec3(.94,.79,.46);
         diffuseColor.rgb=mix(diffuseColor.rgb,ink,mark);
+        float edge=min(min(uv.x,1.-uv.x),min(uv.y,1.-uv.y));
+        float hem=1.-smoothstep(.035,.055,edge);
+        diffuseColor.rgb=mix(diffuseColor.rgb,vArmyTrim,hem);
         if(vArmyLife.y>.1 && vArmyLife.z==5. && uv.x>.68 && uv.y<.20+sin(uv.x*47.)*.09) discard;
       }
       float noise=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);
@@ -137,11 +145,12 @@ export function armyMaterial(uniforms: ArmyUniforms): THREE.MeshStandardMaterial
     `);
     shader.fragmentShader = shader.fragmentShader.replace("#include <emissivemap_fragment>", /* glsl */ `
       #include <emissivemap_fragment>
+      if(vArmyMark.z>.5 && vArmyMark.z<1.5) totalEmissiveRadiance+=vArmyTint*.12;
       float rim=pow(1.-abs(dot(normal,normalize(vViewPosition))),2.5);
       totalEmissiveRadiance+=vArmyTrim*rim*.11*(vArmyMark.z>.5?1.:.3);
     `);
   };
-  material.customProgramCacheKey = () => "realmforge-army-v2";
+  material.customProgramCacheKey = () => "realmforge-army-v2-r2";
   return material;
 }
 

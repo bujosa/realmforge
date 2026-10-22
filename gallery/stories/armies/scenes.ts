@@ -53,7 +53,7 @@ registerStories({
     const ship = view.batch.add({ type: "ship", house: "greyjoy", color: "#1c1c1c", position: { x: -3.15, z: 2.3 }, scale: 0.7 });
     let time = 0, phase = -1;
     view.tick = delta => {
-      if (view.batch.paused) return;
+      if (view.batch.paused || view.batch.motionScale === 0) return;
       time = (time + delta) % 10;
       const next = time < 2.8 ? 0 : time < 4 ? 1 : time < 6 ? 2 : time < 8 ? 3 : 4;
       if (next === phase) return; phase = next;
@@ -90,7 +90,7 @@ for (const detail of ["high", "balanced"] as const) registerStories({
     }
     toggle(view.controls, "Pause", false, value => view.batch.setPaused(value));
     toggle(view.controls, "Reduced motion", false, value => view.batch.setMotionScale(value ? 0 : 1));
-    toggle(view.controls, "Automatic far LOD", false, value => { for (const unit of view.batch.units) Object.assign(unit, { lod: value ? "auto" : "near" }); });
+    toggle(view.controls, "Automatic far LOD", false, value => { for (const unit of view.batch.units) unit.lod = value ? "auto" : "near"; });
     return view;
   },
 });

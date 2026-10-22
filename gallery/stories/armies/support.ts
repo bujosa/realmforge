@@ -1,8 +1,9 @@
 import * as THREE from "three";
+import { installArmyDemoHeraldry } from "./heraldry";
+import { disposeHeraldry } from "../../../src/heraldry";
+import { visualBounds } from "../../bounds";
 import { ArmyBatch, type ArmyType } from "../../../src/armies";
 import type { StoryContext, StoryInstance } from "../../registry";
-
-const icon = document.createElement("link"); icon.rel = "icon"; icon.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23d1b675' d='M6 26V12h5V6h10v6h5v14z'/%3E%3C/svg%3E"; document.head.appendChild(icon);
 
 // Demonstration data only; the public army API has no game-specific house names.
 export const houses = [
@@ -46,40 +47,25 @@ export function swatch(group: THREE.Group, x: number, z: number, color: string, 
 }
 
 const css = `
-body.rf-armies { background:#12191c; color:#eee9da; }
-.rf-armies #app { grid-template-columns:226px minmax(0,1fr); }
-.rf-armies nav { background:#131c20; border-color:#304044; padding:16px 12px; }
-.rf-armies nav:before { content:'REALMFORGE / LAB'; display:block; color:#d1b675; letter-spacing:.15em; font-size:11px; margin:4px 6px 24px; }
-.rf-armies nav a { font-size:12px; padding:7px 8px; }
-.rf-armies nav h2 { color:#8ea5a4; font-size:10px; margin-top:24px; }
-.rf-armies nav a.active { background:#2d4145; color:#f4d38c; }
-.rf-armies #stage { overflow:hidden; min-width:0; }
-.army-panel { position:absolute; z-index:10; inset:20px 22px auto; pointer-events:none; color:#f5ecda; }
-.army-panel h1 { font-family:Georgia,serif; font-weight:400; font-size:30px; margin:5px 0 8px; letter-spacing:-.02em; }
-.army-panel .eyebrow { color:#e1bc72; font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
-.army-panel p { font-size:12px; line-height:1.6; max-width:720px; margin:0 0 12px; color:#b7c7c6; }
-.army-controls { display:flex; flex-wrap:wrap; gap:8px 12px; padding:10px 12px; border:1px solid #4d606166; border-radius:7px; background:#132126ed; width:fit-content; pointer-events:auto; box-shadow:0 6px 24px #0003; }
-.army-controls label { display:flex; gap:7px; align-items:center; color:#c7d4cf; font-size:11px; }
-.army-controls select,.army-controls button { font:12px system-ui; background:#293d42; color:#f3e6c8; border:1px solid #4f6467; border-radius:4px; padding:6px 8px; }
-.army-controls input[type=range] { width:82px; accent-color:#e1bc72; }
-.army-controls input[type=checkbox] { accent-color:#e1bc72; }
-.army-hud { position:absolute; z-index:10; bottom:20px; right:22px; font:11px/1.7 ui-monospace,monospace; background:#122126ed; border:1px solid #52605a88; border-radius:6px; padding:11px 15px; color:#c6d6c9; pointer-events:none; white-space:pre-line; }
-.army-footer { position:absolute; left:22px; bottom:20px; color:#c9d1be; font:10px/1.6 system-ui; letter-spacing:.05em; pointer-events:none; }
+/* Temporary local overlay adapter until StoryContext has overlay / hud slots. */
+.rf-armies #stats { display:none; }
+.army-panel { position:absolute; z-index:4; left:16px; bottom:18px; max-width:calc(100% - 32px); color:#e9e1ca; padding:0; border:0; }
+.army-panel summary { font:10px system-ui; letter-spacing:.08em; color:#d4b77c; margin:0; padding:8px 10px; background:#172327ed; border:1px solid #53615c; border-radius:4px; width:fit-content; }
+.army-controls { display:flex; flex-wrap:wrap; gap:7px 10px; padding:10px; border:1px solid #52615d; border-radius:4px; background:#172327f5; width:fit-content; max-width:580px; box-shadow:0 6px 20px #0003; }
+.army-controls label { display:flex; gap:6px; align-items:center; color:#d2dbd0; font:11px system-ui; }
+.army-controls select,.army-controls button { font:11px system-ui; background:#2a383a; color:#f3e6c8; border:1px solid #536260; border-radius:3px; padding:5px 6px; }
+.army-controls input[type=range] { width:64px; accent-color:#d4b77c; }
+.army-controls input[type=checkbox] { accent-color:#d4b77c; }
+.army-hud { position:absolute; z-index:3; top:18px; right:16px; font:10px/1.7 ui-monospace,monospace; background:#172327e8; border:1px solid #52615d; border-radius:4px; padding:7px 10px; color:#d4dfd0; pointer-events:none; white-space:pre-line; }
+.army-footer { position:absolute; right:16px; bottom:18px; max-width:180px; color:#eee8d5; font:9px/1.6 system-ui; text-align:right; pointer-events:none; white-space:pre-line; }
+.rf-armies .stage-hint { display:none; }
 @media(max-width:600px) {
-  .rf-armies #app { grid-template-columns:1fr; grid-template-rows:88px minmax(0,1fr); }
-  .rf-armies nav { display:flex; flex-wrap:nowrap; overflow:auto; padding:8px; gap:16px; border-right:0; border-bottom:1px solid #304044; }
-  .rf-armies nav:before { display:none; }
-  .rf-armies nav section { flex:none; }
-  .rf-armies nav h2 { margin:0 0 4px; font-size:9px; }
-  .rf-armies nav section a { display:inline-block; padding:5px 7px; max-width:110px; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
-  .army-panel { inset:14px 14px auto; }
-  .army-panel h1 { font-size:25px; }
-  .army-panel p { font-size:10px; max-width:340px; }
+  .army-panel { left:10px; bottom:10px; max-width:calc(100% - 20px); }
   .army-controls { gap:6px 8px; padding:8px; }
   .army-controls label { font-size:10px; }
-  .army-controls select,.army-controls button { font-size:11px; padding:5px; }
-  .army-hud { bottom:14px; right:14px; font-size:9px; padding:8px; }
-  .army-footer { bottom:14px; left:14px; font-size:9px; max-width:145px; }
+  .army-controls select,.army-controls button { font-size:10px; padding:5px; }
+  .army-hud { top:16px; right:10px; font-size:8px; padding:6px 8px; }
+  .army-footer { display:none; }
 }
 `;
 
@@ -96,19 +82,24 @@ export interface Lab extends StoryInstance {
 }
 
 export function lab(ctx: StoryContext, title: string, description: string, detail: "high" | "balanced" | "low" = "high"): Lab {
+  // Clear cached paths as this story deliberately replaces demo sources.
+  disposeHeraldry();
+  const restoreHeraldry = installArmyDemoHeraldry();
   const object = new THREE.Group();
   const batch = new ArmyBatch({ renderer: ctx.renderer, detail }); object.add(batch.object);
   const style = document.createElement("style"); style.textContent = css; document.head.appendChild(style); document.body.classList.add("rf-armies");
-  const panel = document.createElement("section"); panel.className = "army-panel";
-  panel.innerHTML = `<div class="eyebrow">Army collection · original procedural art</div><h1>${title}</h1><p>${description}</p><div class="army-controls"></div>`;
+  const panel = document.createElement("details"); panel.className = "army-panel"; panel.open = true; panel.setAttribute("aria-label", title);
+  panel.innerHTML = `<summary>Company controls</summary><div class="army-controls"></div>`;
+  panel.title = description;
   const hud = document.createElement("output"); hud.className = "army-hud";
-  const footer = document.createElement("div"); footer.className = "army-footer"; footer.textContent = "DRAG TO ORBIT · SCROLL TO INSPECT\nWORLD / NO PLINTH";
+  const footer = document.createElement("div"); footer.className = "army-footer"; footer.textContent = "";
   document.getElementById("stage")!.append(panel, hud, footer);
   const background = ctx.scene.background; ctx.scene.background = new THREE.Color("#26383c");
-  const galleryGround = ctx.scene.children.find(child => child instanceof THREE.Mesh && child.geometry.type === "CircleGeometry");
+  const galleryGround = ctx.scene.children.find(child => child instanceof THREE.Mesh && ["CircleGeometry", "PlaneGeometry"].includes(child.geometry.type));
   const groundVisible = galleryGround?.visible ?? true;
   if (galleryGround) galleryGround.visible = false;
   const samples = new Float32Array(1200), updateSamples = new Float32Array(1200);
+  let previousFrame = performance.now();
   let sampleIndex = 0, samplesCount = 0, previousPrograms = 0, latePrograms = 0, ready = false, started = false, hudClock = 1, frameRequested = true, disposed = false;
   const bounds = new THREE.Box3(), center = new THREE.Vector3(), size = new THREE.Vector3();
   const result: Lab = {
@@ -119,12 +110,14 @@ export function lab(ctx: StoryContext, title: string, description: string, detai
     frame() { frameRequested = true; },
     update(delta, elapsed) {
       if (disposed) return;
+      if (galleryGround) galleryGround.visible = false;
       if (frameRequested) {
-        bounds.setFromObject(object); bounds.getCenter(center); bounds.getSize(size);
+        bounds.copy(visualBounds(object)); bounds.getCenter(center); bounds.getSize(size);
         const aspect = ctx.camera.aspect;
         const span = Math.max(size.x / Math.max(0.5, aspect), size.z * 0.9, size.y * 1.6);
         const distance = span / (2 * Math.tan(ctx.camera.fov * Math.PI / 360)) * 1.2;
         ctx.camera.position.set(center.x + distance * 0.1, center.y + distance * 0.52, center.z + distance * 0.85);
+        ctx.camera.lookAt(center);
         frameRequested = false;
       }
       if (!started) {
@@ -132,6 +125,7 @@ export function lab(ctx: StoryContext, title: string, description: string, detai
         result.warmed = batch.warmup(ctx.renderer, ctx.camera, ctx.scene).then(() => { if (!disposed) { ready = true; previousPrograms = ctx.renderer.info.programs?.length ?? 0; } });
       }
       const updateStart = performance.now();
+      const frameInterval = updateStart - previousFrame; previousFrame = updateStart;
       result.tick?.(delta, elapsed);
       batch.update(delta, ctx.camera);
       const updateMs = performance.now() - updateStart;
@@ -139,18 +133,18 @@ export function lab(ctx: StoryContext, title: string, description: string, detai
       if (ready) {
         if (programs > previousPrograms) latePrograms += programs - previousPrograms;
         previousPrograms = programs;
-        updateSamples[sampleIndex] = updateMs; samples[sampleIndex] = delta * 1000; sampleIndex = (sampleIndex + 1) % samples.length; samplesCount = Math.min(samplesCount + 1, samples.length);
+        updateSamples[sampleIndex] = updateMs; samples[sampleIndex] = frameInterval; sampleIndex = (sampleIndex + 1) % samples.length; samplesCount = Math.min(samplesCount + 1, samples.length);
       }
       hudClock += delta;
       if (hudClock > 0.35) {
         hudClock = 0;
         const stats = batch.stats;
-        hud.textContent = `${stats.companies} companies · ${detail.toUpperCase()}\n${stats.draws} army draws · ${stats.triangles.toLocaleString()} triangles\n${programs} programs · ${(delta * 1000).toFixed(1)} ms frame`;
+        hud.textContent = `${stats.companies} companies · ${detail.toUpperCase()}\n${stats.draws} army draws · ${stats.triangles.toLocaleString()} tris\n${ctx.renderer.info.render.calls} scene draws · ${programs} programs\n${frameInterval.toFixed(1)} ms frame`;
       }
     },
     dispose() {
       disposed = true;
-      batch.dispose();
+      batch.dispose(); restoreHeraldry(); disposeHeraldry();
       object.traverse(child => { if (child instanceof THREE.Mesh || child instanceof THREE.Sprite) {
         if (child instanceof THREE.Mesh) child.geometry.dispose();
         const materials = Array.isArray(child.material) ? child.material : [child.material];
@@ -167,7 +161,7 @@ export function lab(ctx: StoryContext, title: string, description: string, detai
       const values = Array.from(samples.subarray(0, samplesCount)).sort((a, b) => a - b);
       const updates = Array.from(updateSamples.subarray(0, samplesCount)).sort((a, b) => a - b);
       const gl = ctx.renderer.getContext(), debug = gl.getExtension("WEBGL_debug_renderer_info");
-      return { updateP95: updates[Math.floor(updates.length * 0.95)] ?? 0, hardware: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : "unavailable", ...batch.stats, programs: ctx.renderer.info.programs?.length ?? 0, latePrograms, frameP50: values[Math.floor(values.length * 0.5)] ?? 0, frameP95: values[Math.floor(values.length * 0.95)] ?? 0, samples: samplesCount, renderer: ctx.renderer.getContext().getParameter(ctx.renderer.getContext().RENDERER), sceneDraws: ctx.renderer.info.render.calls, sceneTriangles: ctx.renderer.info.render.triangles };
+      return { updateP95: updates[Math.floor(updates.length * 0.95)] ?? 0, hardware: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : "unavailable", ...batch.stats, programs: ctx.renderer.info.programs?.length ?? 0, latePrograms, frameP50: values[Math.floor(values.length * 0.5)] ?? 0, frameP95: values[Math.floor(values.length * 0.95)] ?? 0, samples: samplesCount, renderer: ctx.renderer.getContext().getParameter(ctx.renderer.getContext().RENDERER), sceneDraws: ctx.renderer.info.render.calls, sceneTriangles: ctx.renderer.info.render.triangles, webglError: gl.getError() };
     },
     resetMetrics() { samplesCount = sampleIndex = latePrograms = 0; previousPrograms = ctx.renderer.info.programs?.length ?? 0; },
   };
