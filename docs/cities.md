@@ -1,0 +1,11 @@
+# Cities and seats
+
+`planComplex(site, ground)` creates a deterministic physical castle plan in local metres. `complexGeometry(plan, detailed)` and `heroGeometry(plan, detailed)` return resumable generators; advance until `done`, then use the returned geometry. Heroes use `HeroMaterial`; ordinary complexes use `CastleMaterial`, or `ComplexMaterial` with `addFadeAttribute` for instanced fade coverage. `ComplexLayer` provides the original lazy build/LOD lifecycle behind explicit public ground/frame callbacks.
+
+`castleSettlementGeometry(kind, detailed, style?)`, `villageHouseGeometry(style, detailed)` and `harborGeometry()` cover small settlements and waterfront. `planIslandSeat(id, towers, radius, ground)` builds a single independent island recipe. `planIslandSeats` retains the optional original demo map fit; its coordinates/pads live in `presets/islandSites.ts`. The gallery includes all six island recipes individually.
+
+Complete cities: `buildCity(id, options)` creates either original board city (`kings-landing`, `winterfell`) and returns a `CityHandle`, including detail, season and disposal methods. `PhysicalCity(options)` accepts a `PhysicalRecipe`, `KitPool`, boundary and terrain/water callbacks, with no application model dependency. Drive `advance(deadline)`, then `update(camera, rings)`, then `pool.flush()`. Dispose the city before its pool. `planPhysicalCity(inputs)` is the pure resumable physical plan API. `houseLotInstance` exposes seven physical house families through the shared instancing kit.
+
+The seven optional recipes live in `presets/physicalCities.ts`: King's Landing, Winterfell, Lannisport, Oldtown, White Harbor, Sunspear and Gulltown. Each has its own full-city story plus LOD/quality controls. Their QA sites are synthetic flat regions and straight coastlines, not copies of the production terrain. Shapes, dimensions and recipe parameters are preserved. `PhysicalWorld` and game camera/fog/streaming orchestration stay out of this library.
+
+`WallArt`, `wallGeometry`, `wallPath`, `wallCrest` and `wallProfileHeight` provide the physical wall/fort assembly. Wall path inputs and ground heights use scene units; its profile constants are authored in metres.
