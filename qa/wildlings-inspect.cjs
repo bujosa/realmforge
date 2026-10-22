@@ -2,7 +2,7 @@
 const {chromium,webkit}=require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
 const {withWildlingServer}=require('./wildlings-server.cjs');
 const path=require('node:path'),fs=require('node:fs'),assert=require('node:assert/strict');
-const root=path.join(process.env.HOME,'.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-wild');
+const root=path.join(process.env.HOME,'.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-wild/r2');
 const results={errors:[],checks:[],timestamp:new Date().toISOString()};fs.mkdirSync(root,{recursive:true});
 withWildlingServer(async url=>{
  for(const [engine,type]of [['chrome',chromium],['webkit',webkit]]){

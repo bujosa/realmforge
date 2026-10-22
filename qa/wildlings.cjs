@@ -3,9 +3,9 @@ const {chromium,webkit}=require('/Users/davidbujosa/Documents/Workspace/games/sw
 const {withWildlingServer}=require('./wildlings-server.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {execFileSync}=require('node:child_process');
-const root=path.join(process.env.HOME,'.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-wild');
+const root=path.join(process.env.HOME,'.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-wild/r2');
 const out=file=>{const p=path.join(root,file);fs.mkdirSync(path.dirname(p),{recursive:true});return p;};
-const results={timestamp:new Date().toISOString(),errors:[],warnings:[],load:[],engines:{},contracts:{},frameToleranceMs:.5,vsyncFloorMs:1000/60};
+const results={timestamp:new Date().toISOString(),errors:[],warnings:[],load:[],engines:{},contracts:{},frameToleranceMs:1.5,vsyncFloorMs:1000/60};
 const levels=[0,2,4,6,8,10,12];
 const sizes={desktop:{width:1440,height:900},phone:{width:390,height:844}};
 const quick=process.argv.includes('--quick');
@@ -40,8 +40,8 @@ async function contracts(page){return page.evaluate(()=>{
  return checks;
 });}
 function framePass(metrics,floor){
- // RAF in WebKit is integer-ms quantized; compare to an observed floor and retain the physical 60 Hz target.
- return floor.frameP50<=17.5 && floor.frameP95<=18.5 && metrics.frameP50<=Math.max(results.vsyncFloorMs,floor.frameP50)+results.frameToleranceMs && metrics.frameP95<=Math.max(results.vsyncFloorMs,floor.frameP95)+results.frameToleranceMs;
+ // Director round-2 gate: matched control + 1.5 ms, with raw control retained.
+ return metrics.frameP95 <= floor.frameP95 + results.frameToleranceMs;
 }
 async function beatPrograms(page){return page.evaluate(()=>{
  const q=window.__wildlingQA;q.pause(true);const before=q.renderer.info.programs.length;const budgets=[];
@@ -64,6 +64,13 @@ async function contactSheets(browser,engine,cells){
    await page.setContent(html);await page.locator('img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode())));
    await page.screenshot({path:out(`sheets/${engine}-${viewport}-${view}.jpg`),fullPage:true,type:'jpeg',quality:72});
  }
+ for(const viewport of Object.keys(sizes))for(const view of ['World','Wall']){
+   const entries=cells.filter(c=>c.viewport===viewport&&c.view===view&&[0,6,12].includes(c.strength));
+   const html=`<!doctype html><html><body style="margin:0;background:#111e27;color:#edf1e8;font:14px system-ui"><header style="padding:24px"><h1>Round 1 → Round 2 · ${engine} · ${viewport} · ${view}</h1><p>Same public strength and camera · synthetic North patch</p></header><main style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px">${entries.map(c=>['Round 1','Round 2'].map((label,i)=>{const file=i?out(c.crop):path.join(root,'..',c.crop);return `<figure style="margin:0"><figcaption>${label} · ${c.strength}/12</figcaption><img style="display:block;width:100%" src="data:image/jpeg;base64,${fs.readFileSync(file).toString('base64')}"></figure>`;}).join('')).join('')}</main></body></html>`;
+   fs.writeFileSync(out(`comparisons/${engine}-${viewport}-${view}.html`),html);
+   await page.setContent(html);await page.locator('img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode())));
+   await page.screenshot({path:out(`comparisons/${engine}-${viewport}-${view}.jpg`),fullPage:true,type:'jpeg',quality:72});
+ }
  await page.close();
 }
 async function video(browser,engine,url,kind){
@@ -76,7 +83,10 @@ async function video(browser,engine,url,kind){
      await page.evaluate(()=>{window.__wildlingQA.setStrength(8);window.__wildlingQA.play('threshold');});await page.waitForTimeout(3200);
    }else{
      await page.getByRole('button',{name:'Attack',exact:true}).click();await page.waitForTimeout(5050);
-     await page.getByRole('button',{name:kind==='watch'?'Watch holds':'Wildlings prevail',exact:true}).click();await page.waitForTimeout(3300);
+     await page.getByRole('button',{name:kind==='watch'?'Watch holds':'Wildlings prevail',exact:true}).click();
+     await page.waitForTimeout(800);await shot(page,`stills/${engine}-${kind}-800ms.jpg`);
+     await page.waitForTimeout(650);await shot(page,`stills/${engine}-${kind}-1450ms.jpg`);
+     await page.waitForTimeout(1850);
    }
  }finally{
    const recording=page.video();await ctx.close();await recording.saveAs(out(`videos/${engine}-${kind}.webm`));await recording.delete();fs.rmdirSync(dir);

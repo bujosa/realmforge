@@ -1,12 +1,15 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import IceWallMaterial from "../../../src/materials/IceWallMaterial";
+import { WallIceMaterial, wallGeometry, watchFortGeometry } from "../../../src/cities/WallArt";
+import { wallPath } from "../../../src/cities/WallProfile";
+import { WALL_HEIGHT_METRES } from "../../../src/core/wallScale";
+import { METRES_PER_UNIT } from "../../../src/core/SceneFrame";
+import { natureGeometry } from "../../../src/nature/nature";
 import { naturalTree } from "../../../src/nature/NaturalTrees";
-import { modularCastle } from "../../../src/castles/castleKit";
 import { paintGeometry } from "../../../src/core/sculpt";
 import type { ThreatRegion } from "../../../src/wildlings";
 
-export const region: ThreatRegion = {minX:-12,maxX:12,northZ:-24,wallZ:0,wallHeight:4.26,beacons:[{x:-10,z:0},{x:0,z:0},{x:10,z:0}]};
+export const region: ThreatRegion = {minX:-12,maxX:12,northZ:-24,wallZ:0,wallHeight:WALL_HEIGHT_METRES / METRES_PER_UNIT,beacons:[{x:-10,z:0},{x:0,z:0},{x:10,z:0}]};
 export const groundHeight = (x:number,z:number):number => .10+Math.sin(x*.24)*Math.sin(z*.19)*.10+Math.max(0,-z-13)*.025;
 const hash=(n:number):number=>{const x=Math.sin(n*127.1)*43758.5453;return x-Math.floor(x);};
 const merge=(parts:THREE.BufferGeometry[]):THREE.BufferGeometry=>{const result=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());return result;};
@@ -23,17 +26,21 @@ export function northPatch(): THREE.Group {
   }
   terrain.setAttribute("color",new THREE.Float32BufferAttribute(colors,3));terrain.computeVertexNormals();
   group.add(new THREE.Mesh(terrain,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,metalness:0})));
-  const iceGeometry=new THREE.BoxGeometry(24,4.26,.86,120,24,1).translate(0,2.23,0);
-  const ip=iceGeometry.getAttribute("position"),iceColors:number[]=[];
-  const pale=new THREE.Color("#d4e9ed"),blue=new THREE.Color("#7baac4"),iceTone=new THREE.Color();
-  for(let i=0;i<ip.count;i++){
-    const x=ip.getX(i),y=ip.getY(i),z=ip.getZ(i);
-    ip.setZ(i,z+Math.sign(z)*(.024*Math.sin(x*7.1)+.018*Math.sin(x*19.4+y*.4)));
-    iceTone.copy(blue).lerp(pale,THREE.MathUtils.clamp(y/4.26*.65+.12*Math.sin(y*13.+Math.sin(x*3.)*.2),0,1));
-    iceColors.push(iceTone.r,iceTone.g,iceTone.b);
-  }
-  iceGeometry.setAttribute("color",new THREE.Float32BufferAttribute(iceColors,3));iceGeometry.computeVertexNormals();
-  const ice=new THREE.Mesh(iceGeometry,new IceWallMaterial());ice.name="Library layered ice material · 213 m Wall";group.add(ice);
+  const edges=[{a:{x:region.minX,z:0},b:{x:region.maxX,z:0}}];
+  const path=wallPath(edges,region.wallHeight,groundHeight);
+  const iceGeometry=wallGeometry(path,groundHeight,new THREE.Vector3());
+  const ice=new THREE.Mesh(iceGeometry,new WallIceMaterial());
+  const mood={value:0},oldCompile=ice.material.onBeforeCompile;
+  ice.material.onBeforeCompile=(shader,renderer)=>{
+    oldCompile.call(ice.material,shader,renderer);shader.uniforms.northernMood=mood;
+    shader.fragmentShader="uniform float northernMood;\n"+shader.fragmentShader.replace("#include <emissivemap_fragment>",`#include <emissivemap_fragment>
+      float beaconPool=exp(-pow((wallLocal.x/50.+10.)/1.3,2.))+exp(-pow(wallLocal.x/50./1.3,2.))+exp(-pow((wallLocal.x/50.-10.)/1.3,2.));
+      float crestLight=smoothstep(.62,1.,vWallCoord.y)*beaconPool*northernMood;
+      totalEmissiveRadiance+=vec3(.006,.018,.034)+vec3(.55,.13,.014)*crestLight;`);
+  };
+  ice.material.customProgramCacheKey=()=>"gallery-northern-wall-v2";
+  group.userData.setMood=(strength:number):void=>{mood.value=THREE.MathUtils.smoothstep(strength,6,9);};
+  ice.name="Library fluted, stratified ice with cornice and parapets · 213 m Wall";group.add(ice);
   const treeParts:THREE.BufferGeometry[]=[];
   naturalTree("tree-pine","#344e50",(geometry,x,y,z,color,shade=1)=>{
     geometry.translate(x,y,z);paintGeometry(geometry,color);const c=geometry.getAttribute("color");for(let i=0;i<c.count;i++)c.setXYZ(i,c.getX(i)*shade,c.getY(i)*shade,c.getZ(i)*shade);
@@ -46,15 +53,18 @@ export function northPatch(): THREE.Group {
     dummy.position.set(x,groundHeight(x,z),z);dummy.rotation.set(0,hash(i*3+3)*Math.PI*2,0);dummy.scale.setScalar(3.1+hash(i*5)*1.8);dummy.updateMatrix();trees.setMatrixAt(i,dummy.matrix);
   }
   group.add(trees);
-  const fortGeo=modularCastle(false,0).scale(2.4,2.4,2.4);
-  const forts=new THREE.InstancedMesh(fortGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}),3);
-  [-10,0,10].forEach((x,i)=>{dummy.position.set(x,groundHeight(x,1),1.05);dummy.rotation.set(0,0,0);dummy.scale.setScalar(1);dummy.updateMatrix();forts.setMatrixAt(i,dummy.matrix);});group.add(forts);
-  // Distant rock silhouettes are static terrain, not inferred enemy units.
+  const forts:THREE.BufferGeometry[]=[];
+  [-10,0,10].forEach((x,i)=>{
+    const z=1.12,foot=groundHeight(x,z);
+    forts.push(watchFortGeometry(i===1,WALL_HEIGHT_METRES,{ground:(lx,lz)=>(groundHeight(x+lx/METRES_PER_UNIT,z+lz/METRES_PER_UNIT)-foot)*METRES_PER_UNIT},true).translate(x,foot,z));
+  });
+  const fortMesh=new THREE.Mesh(merge(forts),new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9}));
+  fortMesh.name="Shadow Tower · Castle Black stairs and winch · Eastwatch";group.add(fortMesh);
   const mountains:THREE.BufferGeometry[]=[];
-  for(let i=0;i<18;i++){
-    const h=1.5+hash(i)*3;
-    mountains.push(new THREE.ConeGeometry(1.5+hash(i+3),h,5).translate(-17+i*2,h/2,-25.4));
+  for(let i=0;i<26;i++){
+    const h=1.8+hash(i)*3.8;
+    mountains.push(natureGeometry("mountain-rock").scale(22+hash(i+3)*20,h*9,28).rotateY(hash(i+29)*2).translate(-18+i*1.5,h*.22,-25.8-hash(i+41)*2));
   }
-  group.add(new THREE.Mesh(merge(mountains),new THREE.MeshStandardMaterial({color:"#293f4c",roughness:1})));
+  group.add(new THREE.Mesh(merge(mountains),new THREE.MeshStandardMaterial({color:"#33495a",vertexColors:true,roughness:1})));
   return group;
 }

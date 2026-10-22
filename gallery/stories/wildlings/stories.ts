@@ -45,6 +45,8 @@ function build(ctx:StoryContext,mode:"track"|"threshold"|"attack"|"current"):Sto
   const ground=ctx.scene.children.find(c=>c instanceof THREE.Mesh&&c.geometry.type==="PlaneGeometry");
   const groundWasVisible=ground?.visible??true;
   const grid=ctx.scene.children.find(c=>c instanceof THREE.GridHelper),gridWasVisible=grid?.visible??true;
+  const lights=ctx.scene.children.filter((c):c is THREE.Light=>c instanceof THREE.Light).map(light=>({light,intensity:light.intensity,color:light.color.clone()}));
+  const nightLight=new THREE.Color("#6587b2");
   const target=new THREE.Vector3();
   const cameraView=():void=>{
     if(view==="Free orbit")return;
@@ -121,6 +123,13 @@ function build(ctx:StoryContext,mode:"track"|"threshold"|"attack"|"current"):Sto
     if(first){first=false;threat.warmup(ctx.renderer,ctx.camera);ctx.renderer.compile(ctx.scene,ctx.camera);}
     if(!paused)threat.update(dt);
     current?.update(threat.reducedMotion?0:time,ctx.camera);
+    // Gallery adapter grades existing illumination; the presenter never creates lights.
+    const dusk=THREE.MathUtils.smoothstep(threat.state.visualStrength,3,12);
+    object.userData.setMood(threat.state.visualStrength);
+    for(const {light,intensity,color} of lights){
+      light.intensity=intensity*THREE.MathUtils.lerp(.48,.09,dusk);
+      light.color.copy(color).lerp(nightLight,.35+dusk*.5);
+    }
     ctx.scene.background=activeBackground.copy(beforeBackground).lerp(afterBackground,threat.state.visualStrength/12);
     if(frameCount++===3){ready=true;warmPrograms=ctx.renderer.info.programs?.length??0;}
     if(ready){samples.push(interval);cpu.push(performance.now()-start);if(samples.length>1200){samples.shift();cpu.shift();}}
@@ -128,6 +137,7 @@ function build(ctx:StoryContext,mode:"track"|"threshold"|"attack"|"current"):Sto
     if(ctx.hud.textContent!==hudText)ctx.hud.textContent=hudText;
     sync();
   },dispose(){disposed=true;ctx.scene.onBeforeRender=originalBeforeRender;ctx.scene.background=oldBackground;ctx.scene.fog=oldFog;
+    for(const {light,intensity,color} of lights){light.intensity=intensity;light.color.copy(color);}
     if(ground)ground.visible=groundWasVisible;if(grid)grid.visible=gridWasVisible;current?.dispose();threat.dispose();style.remove();document.body.classList.remove("rf-wild");delete(window as unknown as {__wildlingQA?:unknown}).__wildlingQA;
   }};
 }
