@@ -82,3 +82,5 @@ export { waterEnvironment } from "./materials/WaterEnvironment";
 export { default as SurfaceFinish } from "./materials/SurfaceFinish";
 export { default as ShipWakes } from "./effects/ShipWakes";
 export type { WakeField } from "./effects/ShipWakes";
+
+export * from "./wildlings";
