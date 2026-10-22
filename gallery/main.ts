@@ -1,3 +1,4 @@
+import { Exploration, type NavigationMode } from "./exploration";
 import { visualBounds } from "./bounds";
 import { installDemoSigils } from "../src/presets/demoSigils";
 import * as THREE from "three";
@@ -31,22 +32,26 @@ let grid = new THREE.GridHelper(10, 20, "#bbc2a1", "#abb89a"); grid.position.y =
 scene.add(grid);
 let boundsHelper: THREE.Box3Helper | undefined;
 let current: StoryInstance | null = null;
-let assetsReady = false;
+let assetsReady = false, initialFramePending = false;
 let activeStory: Story | undefined;
 let values: Record<string, ControlValue> = {};
+const frameIntervals: number[] = [];
 let buildMs = 0, frameMs = 0, lastTime = performance.now(), elapsed = 0, lastStats = 0, qaToken = 0;
 let qaMode = false, turntable = false, wireframe = false;
-const orderedCategories = ["Pieces", "Castles", "Cities & seats", "Nature", "Props", "Materials", "Heraldry", "Scale"];
+const exploration = new Exploration(camera, orbit, renderer.domElement, mode => { settings.navigation = mode; applyStage(); writeURL(); });
+const orderedCategories = ["Explore", "Pieces", "Castles", "Cities & seats", "Nature", "Props", "Materials", "Heraldry", "Scale"];
 const orderedStories = () => [...allStories()].sort((a,b) => {
   const ai = orderedCategories.indexOf(a.category), bi = orderedCategories.indexOf(b.category);
   return (ai < 0 ? 1 : ai) - (bi < 0 ? 1 : bi) || a.title.localeCompare(b.title);
 });
 const stageSchema: Record<string, Control> = {
+  navigation: { type: "select", label: "Camera mode", default: "orbit", options: ["orbit", "fly", "walk"] },
   turntable: { type: "boolean", label: "Turntable", default: false },
   grid: { type: "boolean", label: "Grid", default: true },
   ground: { type: "select", label: "Ground", default: "grass", options: ["grass", "sand", "snow", "water", "parchment"] },
   light: { type: "select", label: "Light", default: "day", options: ["day", "dusk", "overcast"] },
   wireframe: { type: "boolean", label: "Wireframe", default: false },
+  fog: { type: "boolean", label: "Atmospheric fog", default: false },
   bounds: { type: "boolean", label: "Bounding box", default: false },
   ratio: { type: "select", label: "Pixel ratio", default: "1", options: ["1", "1.5", "2"] },
 };
@@ -91,6 +96,7 @@ function addControls(container: HTMLElement, schema: Record<string, Control>, st
 }
 function disposeCurrent(): void {
   if (current) { scene.remove(current.object); current.dispose?.(); releaseObject(current.object); current = null; }
+  el("story-overlay").replaceChildren(); el("story-hud").replaceChildren();
   if (boundsHelper) { scene.remove(boundsHelper); boundsHelper.geometry.dispose(); (boundsHelper.material as THREE.Material).dispose(); boundsHelper = undefined; }
 }
 function frame(object: THREE.Object3D, targetCamera = camera, aspect = camera.aspect): void {
@@ -113,14 +119,27 @@ function frame(object: THREE.Object3D, targetCamera = camera, aspect = camera.as
   const extent = Math.max(0.01, box.getSize(new THREE.Vector3()).length());
   ground.scale.setScalar(extent * 40); ground.position.set(center.x, -0.001, center.z);
   grid.scale.setScalar(extent / 5); grid.position.set(center.x, 0.001, center.z);
-  if (targetCamera === camera) { orbit.target.copy(center); orbit.minDistance = distance * 0.03; orbit.maxDistance = distance * 10; orbit.update(); }
+  if (targetCamera === camera) { orbit.target.copy(center); orbit.minDistance = 0; orbit.maxDistance = distance * 10; orbit.update(); }
 }
 function applyStage(): void {
+  const mode = String(settings.navigation) as NavigationMode;
+  if (mode !== exploration.mode) exploration.setMode(mode);
+  el<HTMLSelectElement>("navigation").value = mode;
+  const modeControl = el("stage-controls").querySelector<HTMLSelectElement>('[aria-label="Camera mode"]');
+  if (modeControl) modeControl.value = mode;
+  el("move-pad").hidden = mode === "orbit";
+  el("stage").dataset.navigation = mode;
+  el("stage").querySelector(".stage-badge > span:last-child")!.textContent = mode === "orbit" ? "ORBIT TO INSPECT" : mode === "walk" ? "WALK · 1.8 M EYE HEIGHT" : "FREE FLIGHT";
+  el("stage").querySelector(".stage-hint")!.textContent = mode === "orbit" ? "Drag to orbit · Scroll to zoom · Double-click a surface to approach" : "Drag to look · WASD / arrows move · Q/E down/up · Shift faster · Wheel speed · G walk · Esc orbit";
   const colors: Record<string, string> = { grass: "#79866c", sand: "#b7a585", snow: "#c6d0cf", water: "#4b7480", parchment: "#bfad85" };
   const color = colors[String(settings.ground)] ?? colors.grass;
   (ground.material as THREE.MeshStandardMaterial).color.set(color);
   (ground.material as THREE.MeshStandardMaterial).roughness = settings.ground === "water" ? 0.24 : 1;
-  scene.background = new THREE.Color(color);
+  const sky = activeStory?.category === "Explore" ? settings.light === "dusk" ? "#a28c85" : "#afc5cd" : color;
+  scene.background = new THREE.Color(sky);
+  const span = current ? visualBounds(current.object).getSize(new THREE.Vector3()).length() : 10;
+  scene.fog = settings.fog ? new THREE.Fog(sky,span*0.45,span*2) : null;
+  ground.visible = activeStory?.category !== "Explore";
   grid.visible = Boolean(settings.grid); turntable = Boolean(settings.turntable); wireframe = Boolean(settings.wireframe);
   const dusk = settings.light === "dusk", cloud = settings.light === "overcast";
   hemi.intensity = dusk ? 0.95 : cloud ? 2.5 : 2.1; sun.intensity = dusk ? 2.3 : cloud ? 0.7 : 3;
@@ -142,9 +161,11 @@ function rebuild(): void {
   if (!activeStory) return;
   disposeCurrent();
   const start = performance.now();
-  current = activeStory.build({ scene, camera, renderer, values });
-  scene.add(current.object); assetsReady = !current.ready; buildMs = performance.now() - start;
+  current = activeStory.build({ scene, camera, renderer, values, overlay: el("story-overlay"), hud: el("story-hud") });
+  scene.add(current.object); initialFramePending = true; assetsReady = !current.ready; buildMs = performance.now() - start;
   frame(current.object);
+  exploration.bind(current);
+  exploration.setMode(String(settings.navigation) as NavigationMode);
   const box = visualBounds(current.object);
   boundsHelper = new THREE.Box3Helper(box, new THREE.Color("#f4c56d")); scene.add(boundsHelper);
   const extent = Math.max(0.1, box.getSize(new THREE.Vector3()).length());
@@ -200,12 +221,14 @@ async function showSheet(): Promise<void> {
     if (story.category !== lastCategory) { const h = document.createElement("h2"); h.textContent = story.category; el("qa-grid").append(h); lastCategory = story.category; }
     let built: StoryInstance | undefined;
     try {
-      built = story.build({ scene, camera: thumbCamera, renderer, values: readValues(story.controls ?? {}, new URLSearchParams()) }); scene.add(built.object);
+      built = story.build({ scene, camera: thumbCamera, renderer, overlay: document.createElement("div"), hud: document.createElement("div"), values: readValues(story.controls ?? {}, new URLSearchParams()) }); scene.add(built.object);
       if (built.ready) {
         const deadline = performance.now() + 15000;
         while (!built.ready()) { if (performance.now() > deadline) throw new Error(`Asset readiness timeout: ${story.id}`); await nextFrame(); }
       }
       frame(built.object, thumbCamera, 4 / 3); built.update?.(0, 1);
+      // Builders may initialize animated bounds or request their own legacy frame on first update.
+      frame(built.object, thumbCamera, 4 / 3);
       renderer.setRenderTarget(target); renderer.render(scene, thumbCamera); renderer.setRenderTarget(null);
       // Render to the canvas as well: color management matches the normal stage exactly.
       renderer.render(scene, thumbCamera);
@@ -227,6 +250,7 @@ async function showSheet(): Promise<void> {
   else resize(false);
 }
 function navigate(): void { const { id, params } = route(); if (id === "qa") void showSheet(); else showStory(id, params); }
+el("navigation").addEventListener("change", () => { settings.navigation = el<HTMLSelectElement>("navigation").value; writeURL(); applyStage(); });
 el("search").addEventListener("input", buildNav);
 el("menu").addEventListener("click", () => { const open = document.body.classList.toggle("drawer"); el("menu").setAttribute("aria-expanded", String(open)); });
 addEventListener("keydown", event => { if (event.key === "Escape") { document.body.classList.remove("drawer"); el("menu").setAttribute("aria-expanded", "false"); } });
@@ -235,25 +259,29 @@ el("copy").addEventListener("click", async () => {
   writeURL(); await navigator.clipboard.writeText(location.href); el("toast").textContent = "QA link copied"; el("toast").hidden = false; setTimeout(() => { el("toast").hidden = true; }, 2000);
 });
 addEventListener("hashchange", navigate);
-new ResizeObserver(() => resize()).observe(stage);
+new ResizeObserver(() => resize(exploration.mode === "orbit")).observe(stage);
 buildNav(); resize(false); navigate();
 function stats(): Record<string, number> {
   return { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, programs: renderer.info.programs?.length ?? 0, buildMs: Number(buildMs.toFixed(2)), frameMs: Number(frameMs.toFixed(2)) };
 }
 renderer.setAnimationLoop(now => {
-  const dt = Math.min(0.1, (now - lastTime) / 1000); lastTime = now; elapsed += dt;
+  const intervalMs = now - lastTime; const dt = Math.min(0.1, intervalMs / 1000); lastTime = now; elapsed += dt;
   if (qaMode) return;
   const start = performance.now();
   if (current && turntable && !matchMedia("(prefers-reduced-motion: reduce)").matches) { current.object.rotation.y += dt * 0.22; if (boundsHelper) boundsHelper.box.copy(visualBounds(current.object)); }
   if (current && !assetsReady && (current.ready?.() ?? true)) {
     assetsReady = true; frame(current.object); boundsHelper?.box.copy(visualBounds(current.object));
   }
-  current?.update?.(dt, elapsed); orbit.update(); renderer.render(scene, camera);
+  frameIntervals.push(intervalMs); if (frameIntervals.length > 1200) frameIntervals.shift();
+  current?.update?.(dt, elapsed);
+  // The gallery owns initial framing, including legacy stories that also set the camera.
+  if (initialFramePending && current) { initialFramePending = false; if (exploration.mode === "orbit") frame(current.object); }
+  exploration.update(dt); renderer.render(scene, camera);
   frameMs = frameMs ? frameMs * 0.9 + (performance.now() - start) * 0.1 : performance.now() - start;
   if (now - lastStats > 250) { const s = stats(); el("stats").textContent = `${s.calls} draws · ${s.triangles.toLocaleString()} triangles\n${s.geometries} geometries · ${s.textures} textures · ${s.programs} programs\nBuild ${s.buildMs} ms · frame CPU ${s.frameMs} ms`; el("stats").style.whiteSpace = "pre-line"; lastStats = now; }
 });
 // Explicit inspection surface for the documented QA runner and downstream integrations.
-Object.assign(window, { __realmforge: { stories: () => orderedStories().map(({ id, title, category }) => ({ id, title, category })), stats, ready: () => current?.ready?.() ?? true, values: () => ({ story: activeStory?.id, values, settings }), framing: () => {
+Object.assign(window, { __realmforge: { navigation: () => exploration.state(), resetMetrics: () => { frameIntervals.length=0; }, metrics: () => { const sorted=[...frameIntervals].sort((a,b)=>a-b); return { samples:sorted.length,frameP50:sorted[Math.floor(sorted.length*0.5)]??0,frameP95:sorted[Math.floor(sorted.length*0.95)]??0,...stats() }; }, stories: () => orderedStories().map(({ id, title, category }) => ({ id, title, category })), stats, ready: () => current?.ready?.() ?? true, values: () => ({ story: activeStory?.id, values, settings }), framing: () => {
   if (!current) return [];
   const box = visualBounds(current.object); const points: {x:number;y:number;z:number}[] = [];
   for (const x of [box.min.x,box.max.x]) for (const y of [box.min.y,box.max.y]) for (const z of [box.min.z,box.max.z]) { const p = new THREE.Vector3(x,y,z).project(camera); points.push({x:p.x,y:p.y,z:p.z}); }

@@ -5,3 +5,5 @@
 `KitPool(variants, shadows, assets?, material?)` owns reusable geometry, instanced materials and a group. Publish place lists with `setPlace`, then `flush`. Dispose the pool after its cities. `houseLotInstance` converts physical dimensions into kit instances. `CastlePlacement` and `ResourceSnapshot` are structural input types, with no game model dependency.
 
 `core/sculpt.ts` and `core/finish.ts` contain the extracted geometry paint/bevel/UV utilities. Existing pieces keep their original private sculpt/finish modules so that the separate army work does not conflict. `RepresentationLod`, physical size-law helpers and `HillProfile` are pure extraction dependencies, with no world/camera module imports.
+
+`CameraBands` retains physical band thresholds used by screen-space tokens. `BuildBudget` keeps the production sliced-builder scheduling policy; clearance/point helpers are pure geometry dependencies. Their presence does not install a production scheduler or a world singleton.

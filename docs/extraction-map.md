@@ -71,3 +71,7 @@ Game model and placement types become the structural interfaces in `src/core/con
 | `world/terrain/HillProfile.ts` | `src/core/HillProfile.ts` |
 
 `PhysicalWorld` remains in the game: polygon selection, terrain streaming, fog and camera orchestration are application concerns. `PhysicalCity` accepts explicit ground/water/boundary callbacks.
+
+## Round 2 audit
+
+The exhaustive [catalogue audit](catalogue.md) maps all 424 files in the frozen tabletop source, including the round-2 dragons/effects/tokens, full physical flora, bridge/camp/harbour/composer props, water/environment/wakes, adaptive ocean topology, procedural finish, surface GLSL and six CC0 KTX2 arrays. Every excluded world adapter has a reason; protected army sources remain assigned to rf-armies. Binary provenance hashes are recorded with the audit.

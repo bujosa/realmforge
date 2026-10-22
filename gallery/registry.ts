@@ -19,9 +19,13 @@ export interface StoryContext {
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
   values: Record<string, ControlValue>;
+  /** Story-owned UI slots, cleared by the gallery on disposal. */
+  overlay: HTMLElement;
+  hud: HTMLElement;
 }
 export interface StoryInstance {
   object: THREE.Object3D;
+  navigation?: { metresPerUnit?: number; walkStart?: { position: [number, number, number]; target: [number, number, number] } };
   /** Optional asset readiness; geometry is visible through its procedural fallback while loading. */
   ready?(): boolean;
   update?(deltaSeconds: number, elapsedSeconds: number): void;

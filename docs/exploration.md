@@ -1,0 +1,15 @@
+# Exploring components
+
+Orbit is the default. The header's navigation selector or the inspector's Camera mode switches to Fly or Walk; both stay synchronized. `E` enters flight from Orbit, `G` toggles walking, Escape returns to Orbit. Focus the canvas before keyboard movement; text fields and controls retain their normal keys. Mode is recorded as `view.navigation` in a QA link. Camera pose and speed are local to the session.
+
+In Fly, drag to look; WASD or arrow keys move forward/back/sideways, Q/E descend/ascend, Shift multiplies speed by four, and the wheel changes speed. Forward follows the view direction. On a phone, one finger looks, two fingers translate and pinch changes speed; a directional pad also supports continuous movement. This is touch viewport QA, not a physical-device Safari certification.
+
+Walk enters an authored street at 1.8 metres eye height, using the story's `metresPerUnit` (50 by default). WASD, arrows and the phone pad follow raycast ground. Short movement substeps and axis sliding stop the camera against solid walls. A static spatial index splits instanced batches into nearby raycast proxies without adding draws or owning GPU resources. Water and effects can mark `userData.nonSolid = true`. Walking is a QA navigation aid: shader-displaced roof silhouettes, stairs and thin decorative geometry are approximate collision surfaces, not a gameplay physics system.
+
+Double-click a mesh surface to approach it smoothly in any mode and move the Orbit pivot. The near plane allows street-level closeups; the far plane scales with the framed scene. Reset view restores the story's default controls and Orbit. Optional atmospheric fog lives in Stage & lighting. Composed scenes hide the infinite gallery ground so it cannot cover their sea and river surfaces.
+
+Every named seat has a composed Explore story, plus Lannisport, Gulltown and the Westeros sampler. Seven cities use the full production physical layout; the remaining seats have synthetic approach settlements. Every scene includes terrain, trees, livestock, props and optional torches/smoke. Coastal sites add the production water shader, piers and skiffs. The sampler combines castles, a village, forest, mountains, river, bridge and coast. These are synthetic QA environments, not reconstructions of the production map. Optional new armies are deliberately omitted to preserve the separate worker's ownership and API lifecycle.
+
+Stories may return `navigation: { metresPerUnit, walkStart: { position: [x,y,z], target: [x,y,z] } }`. Positions are scene coordinates. Without a start, Walk raycasts below the orbit target. The gallery owns navigation and the single render loop; builders only provide geometry and scale metadata.
+
+Run `npm run build`, then `node qa/explore.cjs` for Chrome/WebKit desktop and phone recordings, screenshots, URL-mode reproduction, movement checks, surface approach, and the sampler's frame interval p50/p95 at 1440×900. Each QA command starts and stops its own exact preview PID. Nothing remains listening between commands. Evidence goes to the assigned rf-kit evidence directory.

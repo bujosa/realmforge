@@ -150,3 +150,27 @@ export function unitKind(type: string): StrategicKind {
   return type == "ship" ? "ship" : type == "dragon" ? "dragon" : "army";
 }
 
+/** Camera bands live with the frame (S1, frame/CameraBands.ts); re-exported for this layer. */
+export { bandOf } from "./CameraBands";
+export type { CameraBand } from "./CameraBands";
+
+/** Token kinds and their fixed screen sizes (§2.5, decision 3). */
+export type TokenKind = "order" | "power" | "garrison" | "loyalty" | "lock";
+
+const TOKEN_PIXELS: Readonly<Record<TokenKind, [number, number]>> = {
+  order: [40, 48], power: [28, 34], garrison: [34, 40], loyalty: [28, 34], lock: [40, 48]
+};
+
+/** Minimum pointer target of any token (CSS px). */
+export const TOKEN_HIT_PIXELS = 44;
+/** Largest screen push used to separate overlapping tokens (CSS px). */
+export const TOKEN_MAX_PUSH = 24;
+/** In the ground and local bands the anchor rises to slot + 6 m. */
+export const TOKEN_CLOSE_LIFT_METRES = 6;
+/** Opacity of a token hidden behind terrain or walls (still pickable). */
+export const TOKEN_OCCLUDED_OPACITY = 0.6;
+
+/** Diameter in CSS px of a token kind on a desktop or a touch screen. */
+export function tokenPixels(kind: TokenKind, touch: boolean): number {
+  return TOKEN_PIXELS[kind][touch ? 1 : 0];
+}

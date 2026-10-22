@@ -4,25 +4,27 @@ const path = require('node:path');
 const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 const { chromium, webkit } = require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
-const base = process.env.QA_URL || 'http://127.0.0.1:5201/';
-const out = path.resolve(process.env.QA_OUTPUT_DIR || 'qa-output');
+const { withServer, evidence } = require('./server.cjs');
+let base;
+const out = path.resolve(process.env.QA_OUTPUT_DIR || path.join(evidence, 'r2-final'));
 fs.mkdirSync(out, { recursive: true });
 const slug = value => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
-const summary = { date: new Date().toISOString(), host: os.hostname(), uptime: execFileSync('uptime', { encoding: 'utf8' }).trim(), base, runs: [], errors: [] };
+const summary = { date: new Date().toISOString(), host: os.hostname(), uptime: execFileSync('uptime', { encoding: 'utf8' }).trim(), runs: [], errors: [] };
 console.log(summary.uptime);
-(async () => {
+withServer(async ownedBase => {
+  base = ownedBase; summary.base = base;
   for (const engine of ['chrome', 'webkit']) {
     const browser = engine === 'chrome' ? await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist'] }) : await webkit.launch({ headless: true });
     try {
-      for (const [form, viewport] of [['desktop', { width: 1440, height: 960 }], ['phone', { width: 390, height: 844 }]]) {
+      for (const [form, viewport] of [['desktop', { width: 1440, height: 900 }], ['phone', { width: 390, height: 844 }]]) {
         const context = await browser.newContext({ viewport, deviceScaleFactor: 1, reducedMotion: 'reduce' });
         const page = await context.newPage(); const errors = [];
         page.on('console', msg => { if (msg.type() === 'error' || /WebGL.*(error|invalid)|GL_INVALID|shader error/i.test(msg.text())) errors.push({ story: page.url(), type: msg.type(), message: msg.text() }); });
         page.on('pageerror', err => errors.push({ story: page.url(), type: 'pageerror', message: err.message }));
         page.on('response', response => { if (response.status() >= 400) errors.push({ story: page.url(), type: 'http', message: `${response.status()} ${response.url()}` }); });
         page.on('requestfailed', req => errors.push({ story: page.url(), type: 'requestfailed', message: `${req.url()} ${req.failure()?.errorText}` }));
-        await page.goto(base); await page.waitForFunction(() => window.__realmforge && document.body.dataset.ready, { timeout: 30000 });
+        await page.goto(base); await page.waitForFunction(() => window.__realmforge && document.body.dataset.ready, null, { timeout: 30000 });
         let stories = await page.evaluate(() => window.__realmforge.stories());
         if (process.env.QA_FILTER) stories = stories.filter(story => new RegExp(process.env.QA_FILTER).test(story.id));
         const run = { engine, form, viewport, stories: [], flows: [], errors };
@@ -38,13 +40,14 @@ console.log(summary.uptime);
             const stats = await page.evaluate(() => window.__realmforge.stats());
             const corners = await page.evaluate(() => window.__realmforge.framing());
             const framed = corners.every(p => Math.abs(p.x) < 1 && Math.abs(p.y) < 1 && p.z < 1 && p.z > -1);
-            if (!framed) errors.push({ story: story.id, type: 'framing', message: JSON.stringify(corners) });
+            if (!framed) { errors.push({ story: story.id, type: 'framing', message: JSON.stringify(corners) }); console.error(`FRAMING FAILED ${story.id}`); }
             const screenshot = path.join(folder, `${slug(story.id)}.jpg`);
             await page.screenshot({ path: screenshot, type: 'jpeg', quality: 72 });
             const thumbnail = await page.locator('#stage').screenshot({ type: 'jpeg', quality: 72 });
             if (!thumbnails.has(story.category)) thumbnails.set(story.category, []);
             thumbnails.get(story.category).push({ title: story.title, image: `data:image/jpeg;base64,${thumbnail.toString('base64')}` });
             run.stories.push({ ...story, ...stats, framed, screenshot: path.relative(out, screenshot), captureMs: +(performance.now() - start).toFixed(2) });
+            fs.writeFileSync(path.join(out, `progress-${engine}-${form}.json`), JSON.stringify(run, null, 2));
             console.log(`${engine}/${form} ${run.stories.length}/${stories.length} ${story.id} ${stats.triangles} triangles`);
           } catch (error) { errors.push({ story: story.id, type: 'capture', message: error.message }); console.error(`CAPTURE FAILED ${story.id}: ${error.message}`); }
         }
@@ -94,4 +97,4 @@ console.log(summary.uptime);
   fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify(summary, null, 2));
   console.log(`Visual QA complete: ${summary.runs.reduce((sum,run) => sum + run.stories.length, 0)} captures, ${summary.errors.length} errors.`);
   if (summary.errors.length) { console.error(JSON.stringify(summary.errors, null, 2)); process.exitCode = 1; }
-})().catch(error => { summary.errors.push({ type: 'runner', message: error.stack }); fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify(summary, null, 2)); console.error(error); process.exitCode = 1; });
+}).catch(error => { summary.errors.push({ type: 'runner', message: error.stack }); fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify(summary, null, 2)); console.error(error); process.exitCode = 1; });

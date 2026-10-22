@@ -49,3 +49,35 @@ export type { CityOptions, CityHandle, CityTier, CityDetail } from "./cities/set
 export type { PhysicalRecipe } from "./presets/physicalCities";
 
 export { planIslandSeat, planIronIslandSeats as planIslandSeats } from "./cities/IronIslandSeats";
+
+export { dockGeometry, boatGeometry } from "./props/HarborProps";
+export { surfaceMaterial as waterSurfaceMaterial, applyWaterColors, attachCaustics } from "./materials/WaterMaterial";
+export type { WaterUniforms, WaterMaterial } from "./materials/WaterMaterial";
+export { waveHeight, waveSpectrum } from "./materials/waves";
+export { SurfaceArrays, surfaceArrayMaterial, terrainLayers, masonryLayers } from "./materials/SurfaceArrays";
+export type { SurfaceArraySet } from "./materials/SurfaceArrays";
+export { default as bridgeGeometry } from "./props/BridgeGeometry";
+export { campGeometry } from "./props/CampGeometry";
+export { floraGeometry, floraGrassGeometry, floraGroupGeometry, floraImpostorGeometry, floraCanopyTextures } from "./nature/FloraGeometry";
+export type { FloraSpecies } from "./nature/FloraPlacement";
+export { default as TokenLayer } from "./tokens/TokenLayer";
+export type { TokenInput } from "./tokens/TokenLayer";
+export { default as TokenAtlas } from "./tokens/TokenAtlas";
+export { createDragon } from "./dragons/createDragon";
+export type { LivingDragon, CreateDragonOptions, DragonPalette, DragonTier } from "./dragons/types";
+export { dragonWingspan } from "./dragons/presence";
+export { createDragonFire, DragonScorch } from "./dragons/fire";
+export { createInstancedVfx } from "./effects/InstancedVfx";
+export { shape as composedPropGeometry, hasShape as hasComposedProp, disposeShapes as disposeComposedProps } from "./props/ComposedShapes";
+export { DRAWABLE_VARIANTS as composedPropVariants } from "./props/ComposedVariants";
+
+export { oceanRings, adaptiveHeightGeometry } from "./materials/OceanGeometry";
+export type { OceanRingLayout, OceanRings } from "./materials/OceanGeometry";
+export { surfaceDeclarations, surfaceColor, surfaceNormal, surfaceRoughness } from "./materials/SurfaceShader";
+export type { VfxOptions, VfxHandle, VfxStats, Particle } from "./effects/InstancedVfx";
+export { createChargeDust, createMeleeSparks, createArrowVolley, createBannerFall, createSiegeSmoke, createShipRam, createRetreatDust, createDragonFire as createFireBurst } from "./effects/presets";
+export type { PointCue, PathCue, SiegeCue, ShipCue } from "./effects/presets";
+export { waterEnvironment } from "./materials/WaterEnvironment";
+export { default as SurfaceFinish } from "./materials/SurfaceFinish";
+export { default as ShipWakes } from "./effects/ShipWakes";
+export type { WakeField } from "./effects/ShipWakes";
