@@ -89,7 +89,8 @@ export interface Lab extends StoryInstance {
   controls: HTMLElement;
   hud: HTMLElement;
   footer: HTMLElement;
-  ready: Promise<void>;
+  /** Resolves when the batch has compiled every material variant. */
+  warmed: Promise<void>;
   tick?: (delta: number, elapsed: number) => void;
   frame: () => void;
 }
@@ -112,7 +113,9 @@ export function lab(ctx: StoryContext, title: string, description: string, detai
   const bounds = new THREE.Box3(), center = new THREE.Vector3(), size = new THREE.Vector3();
   const result: Lab = {
     object, batch, controls: panel.querySelector(".army-controls")!, hud, footer,
-    ready: Promise.resolve(),
+    warmed: Promise.resolve(),
+    // Geometry is built synchronously; shader warmup runs on the first update.
+    ready: () => true,
     frame() { frameRequested = true; },
     update(delta, elapsed) {
       if (disposed) return;
@@ -126,7 +129,7 @@ export function lab(ctx: StoryContext, title: string, description: string, detai
       }
       if (!started) {
         started = true;
-        result.ready = batch.warmup(ctx.renderer, ctx.camera, ctx.scene).then(() => { if (!disposed) { ready = true; previousPrograms = ctx.renderer.info.programs?.length ?? 0; } });
+        result.warmed = batch.warmup(ctx.renderer, ctx.camera, ctx.scene).then(() => { if (!disposed) { ready = true; previousPrograms = ctx.renderer.info.programs?.length ?? 0; } });
       }
       const updateStart = performance.now();
       result.tick?.(delta, elapsed);
