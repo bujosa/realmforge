@@ -47,7 +47,7 @@ export default class ComplexMaterial extends CastleMaterial {
 }
 
 /**
- * World ×20 hero material (the Rock, the Eyrie's needles, the Hightower): the
+ * World ×20 hero material (the headland, the highland palace's needles, the the lighthouse): the
  * shared castle surfaces plus tag 8, faceted rock with bedding planes, broken
  * vertical joints and lichen blotches in metres (uv = metres along the face,
  * metres up), each faded by its screen footprint so nothing shimmers at range.

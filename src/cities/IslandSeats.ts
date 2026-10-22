@@ -1,7 +1,7 @@
 import { REFERENCE, SITES, PADS } from "../presets/islandSites";
 /** Original, public static castle recipes. The base/FFC pilot uses the live R1
  * anchor as its reference; other variants await atlas-owned shoreline seating.
- * Every footprint is dry, inside Pyke and outside all public token/layout pads.
+ * Every footprint is dry, inside the island fortress and outside all public token/layout pads.
  * No game state, ownership, orders, figures or banners enter this module. */
 import type { ComplexGround, ComplexPlan, Seated, Structure } from "./ComplexPlan";
 
@@ -29,7 +29,7 @@ function shapes(count: number, radius: number): Structure[] {
 export interface IronSeatPlan extends ComplexPlan { seats: { id: string; x: number; z: number }[] }
 
 /** One merged scenery plan, deliberately without pick/camera volumes. */
-export function planIronIslandSeats(anchor: { x: number; y: number }, ground: ComplexGround): IronSeatPlan | undefined {
+export function planIslandSeats(anchor: { x: number; y: number }, ground: ComplexGround): IronSeatPlan | undefined {
   // A different public castle anchor means a different variant/shoreline fit:
   // omit rather than guess. The intake supplies all four variant transforms.
   if (Math.hypot(anchor.x - REFERENCE[0], anchor.y - REFERENCE[1]) > 0.1) return undefined;

@@ -1,6 +1,295 @@
-# Frozen source catalogue audit
+# Catalogue
 
-Audited source: `d594e1c1`, the read-only tabletop snapshot. Every file under that snapshot is accounted for below, including all GLB/WebP/KTX2 binaries. Paths are relative to `src/client/tabletop/`. “Extracted” means visual code or a required dependency exists in this library; it does not mean every original world integration policy was copied. “Other owner” preserves the separate rf-armies boundary.
+## Current library inventory
+
+The gallery has **258 stable study IDs** across the categories below. `gallery/stories/<domain>/` contains self-registering studies; file names use kebab-case. IDs remain stable across the folder reorganization. Library classes retain PascalCase file names and geometry/data functions retain camelCase, following the existing TypeScript conventions.
+
+| Category | Studies | Library / documentation |
+|---|---|---|
+| Explore | 27 | [exploration](exploration.md) |
+| Pieces | 8 | [pieces](pieces.md) |
+| Armies | 16 | [armies](armies.md) |
+| Wildlings | 4 | [wildlings](wildlings.md) |
+| Castles | 35 | [castles](castles.md) |
+| Cities & seats | 50 | [cities](cities.md) |
+| Nature | 20 | [nature](nature.md) |
+| Props | 65 | [props](props.md) |
+| Dragons | 1 | [dragons](dragons.md) |
+| Effects | 11 | [effects](effects.md) |
+| Tokens | 1 | [tokens](tokens.md) |
+| Materials | 18 | [materials](materials.md) |
+| Heraldry | 1 | [heraldry](heraldry.md) |
+| Scale | 1 | [scale](scale.md) |
+
+<details>
+<summary>All gallery study IDs</summary>
+
+| ID | Title | Category |
+|---|---|---|
+| `explore/casterly-rock` | Casterly Rock · inhabited site | Explore |
+| `explore/crackclaw-point` | Crackclaw Point · inhabited site | Explore |
+| `explore/dragonstone` | Dragonstone · inhabited site | Explore |
+| `explore/flints-finger` | Flints Finger · inhabited site | Explore |
+| `explore/gulltown` | Gulltown · inhabited site | Explore |
+| `explore/harrenhal` | Harrenhal · inhabited site | Explore |
+| `explore/highgarden` | Highgarden · inhabited site | Explore |
+| `explore/iron-bank` | Iron Bank · inhabited site | Explore |
+| `explore/kings-landing` | Kings Landing · inhabited site | Explore |
+| `explore/lannisport` | Lannisport · inhabited site | Explore |
+| `explore/moat-cailin` | Moat Cailin · inhabited site | Explore |
+| `explore/oldtown` | Oldtown · inhabited site | Explore |
+| `explore/pentos` | Pentos · inhabited site | Explore |
+| `explore/pyke` | Pyke · inhabited site | Explore |
+| `explore/riverrun` | Riverrun · inhabited site | Explore |
+| `explore/seagard` | Seagard · inhabited site | Explore |
+| `explore/starfall` | Starfall · inhabited site | Explore |
+| `explore/storms-end` | Storms End · inhabited site | Explore |
+| `explore/sunspear` | Sunspear · inhabited site | Explore |
+| `explore/the-eyrie` | The Eyrie · inhabited site | Explore |
+| `explore/the-reach` | The Reach · inhabited site | Explore |
+| `explore/the-vale-of-arryn` | The Vale Of Arryn · inhabited site | Explore |
+| `explore/volantis` | Volantis · inhabited site | Explore |
+| `explore/westeros-sampler` | Westeros sampler · river to coast | Explore |
+| `explore/white-harbor` | White Harbor · inhabited site | Explore |
+| `explore/winterfell` | Winterfell · inhabited site | Explore |
+| `explore/yronwood` | Yronwood · inhabited site | Explore |
+| `armies/board-balanced` | 120 companies · balanced | Armies |
+| `armies/board-high` | 120 companies · high | Armies |
+| `wildlings/attack` | Attack · three horns, two outcomes | Wildlings |
+| `armies/battle` | Battle · 10 second loop | Armies |
+| `armies/before-after` | Before / after · same scale | Armies |
+| `armies/knight-far` | Cavalry · far | Armies |
+| `armies/knight-near` | Cavalry · near | Armies |
+| `pieces/company-footman` | Current company · Footman | Pieces |
+| `pieces/company-knight` | Current company · Knight | Pieces |
+| `pieces/company-siege-engine` | Current company · Siege Engine | Pieces |
+| `wildlings/current` | Current game · illustrative camps | Wildlings |
+| `pieces/dragon` | Dragon | Pieces |
+| `pieces/footman` | Footman | Pieces |
+| `armies/footman-far` | Infantry · far | Armies |
+| `armies/footman-near` | Infantry · near | Armies |
+| `pieces/knight` | Knight | Pieces |
+| `pieces/living-dragon` | Living dragon · skeletal flight | Dragons |
+| `pieces/ship` | Ship | Pieces |
+| `pieces/siege-engine` | Siege Engine | Pieces |
+| `armies/state-player` | State player | Armies |
+| `wildlings/track` | Threat track · the burning North | Wildlings |
+| `wildlings/threshold` | Threshold · a warning from the Wall | Wildlings |
+| `armies/siege-engine-far` | Trebuchet · far | Armies |
+| `armies/siege-engine-near` | Trebuchet · near | Armies |
+| `armies/ship-far` | War galley · far | Armies |
+| `armies/ship-near` | War galley · near | Armies |
+| `armies/world-scale` | World x1 · castle & company scale | Armies |
+| `armies/dragon-far` | Wyvern · far | Armies |
+| `armies/dragon-near` | Wyvern · near | Armies |
+| `castles/casterly-rock` | Casterly Rock | Castles |
+| `castles/crackclaw-point` | Crackclaw Point | Castles |
+| `castles/style-crownlands` | Crownlands · castle style | Castles |
+| `castles/style-dorne` | Dorne · castle style | Castles |
+| `castles/dragonstone` | Dragonstone | Castles |
+| `castles/style-essos` | Essos · castle style | Castles |
+| `castles/flints-finger` | Flints Finger | Castles |
+| `castles/harrenhal` | Harrenhal | Castles |
+| `castles/highgarden` | Highgarden | Castles |
+| `castles/iron-bank` | Iron Bank | Castles |
+| `castles/style-islands` | Islands · castle style | Castles |
+| `castles/kings-landing` | Kings Landing | Castles |
+| `castles/moat-cailin` | Moat Cailin | Castles |
+| `castles/modular-kit` | Modular castle · Kenney CC0 | Castles |
+| `castles/style-north` | North · castle style | Castles |
+| `castles/oldtown` | Oldtown | Castles |
+| `castles/pentos` | Pentos | Castles |
+| `castles/pyke` | Pyke | Castles |
+| `castles/style-reach` | Reach · castle style | Castles |
+| `castles/style-riverlands` | Riverlands · castle style | Castles |
+| `castles/riverrun` | Riverrun | Castles |
+| `castles/seagard` | Seagard | Castles |
+| `castles/starfall` | Starfall | Castles |
+| `castles/style-stormlands` | Stormlands · castle style | Castles |
+| `castles/storms-end` | Storms End | Castles |
+| `castles/sunspear` | Sunspear | Castles |
+| `castles/the-eyrie` | The Eyrie | Castles |
+| `castles/the-reach` | The Reach | Castles |
+| `castles/the-vale-of-arryn` | The Vale Of Arryn | Castles |
+| `castles/style-vale` | Vale · castle style | Castles |
+| `castles/volantis` | Volantis | Castles |
+| `castles/style-westerlands` | Westerlands · castle style | Castles |
+| `castles/white-harbor` | White Harbor | Castles |
+| `castles/winterfell` | Winterfell | Castles |
+| `castles/yronwood` | Yronwood | Castles |
+| `cities/island-blacktyde` | Blacktyde · island seat | Cities & seats |
+| `cities/casterly-rock` | Casterly Rock · physical seat | Cities & seats |
+| `cities/crackclaw-point` | Crackclaw Point · physical seat | Cities & seats |
+| `cities/dragonstone` | Dragonstone · physical seat | Cities & seats |
+| `cities/flints-finger` | Flints Finger · physical seat | Cities & seats |
+| `cities/island-grey-garden` | Grey Garden · island seat | Cities & seats |
+| `cities/full-gulltown` | Gulltown · complete city | Cities & seats |
+| `cities/island-hammerhorn` | Hammerhorn · island seat | Cities & seats |
+| `cities/harbor` | Harbor · timber & stone | Cities & seats |
+| `cities/harrenhal` | Harrenhal · physical seat | Cities & seats |
+| `cities/highgarden` | Highgarden · physical seat | Cities & seats |
+| `cities/house-court` | House kit · court | Cities & seats |
+| `cities/house-flat-dome` | House kit · flat-dome | Cities & seats |
+| `cities/house-gable-low` | House kit · gable-low | Cities & seats |
+| `cities/house-gable-steep` | House kit · gable-steep | Cities & seats |
+| `cities/house-hall` | House kit · hall | Cities & seats |
+| `cities/house-tower-house` | House kit · tower-house | Cities & seats |
+| `cities/house-turf-long` | House kit · turf-long | Cities & seats |
+| `cities/island-seats` | Island seats · six scenery recipes | Cities & seats |
+| `cities/board-kings-landing` | King's Landing · board city | Cities & seats |
+| `cities/full-kings-landing` | King's Landing · complete city | Cities & seats |
+| `cities/kings-landing` | Kings Landing · physical seat | Cities & seats |
+| `cities/full-lannisport` | Lannisport · complete city | Cities & seats |
+| `cities/moat-cailin` | Moat Cailin · physical seat | Cities & seats |
+| `cities/full-oldtown` | Oldtown · complete city | Cities & seats |
+| `cities/oldtown` | Oldtown · physical seat | Cities & seats |
+| `cities/island-orkmont` | Orkmont · island seat | Cities & seats |
+| `cities/pentos` | Pentos · physical seat | Cities & seats |
+| `cities/pyke` | Pyke · physical seat | Cities & seats |
+| `cities/riverrun` | Riverrun · physical seat | Cities & seats |
+| `cities/island-saltcliffe` | Saltcliffe · island seat | Cities & seats |
+| `cities/seagard` | Seagard · physical seat | Cities & seats |
+| `cities/starfall` | Starfall · physical seat | Cities & seats |
+| `cities/storms-end` | Storms End · physical seat | Cities & seats |
+| `cities/full-sunspear` | Sunspear · complete city | Cities & seats |
+| `cities/sunspear` | Sunspear · physical seat | Cities & seats |
+| `cities/island-ten-towers` | Ten Towers · island seat | Cities & seats |
+| `cities/the-eyrie` | The Eyrie · physical seat | Cities & seats |
+| `cities/the-reach` | The Reach · physical seat | Cities & seats |
+| `cities/the-vale-of-arryn` | The Vale Of Arryn · physical seat | Cities & seats |
+| `cities/vale-croft` | Vale Croft | Cities & seats |
+| `cities/vale-hamlet` | Vale Hamlet | Cities & seats |
+| `cities/village-house` | Village House | Cities & seats |
+| `cities/volantis` | Volantis · physical seat | Cities & seats |
+| `cities/full-white-harbor` | White Harbor · complete city | Cities & seats |
+| `cities/white-harbor` | White Harbor · physical seat | Cities & seats |
+| `cities/board-winterfell` | Winterfell · board city | Cities & seats |
+| `cities/full-winterfell` | Winterfell · complete city | Cities & seats |
+| `cities/winterfell` | Winterfell · physical seat | Cities & seats |
+| `cities/yronwood` | Yronwood · physical seat | Cities & seats |
+| `nature/flora-birch` | Birch · physical flora | Nature |
+| `nature/canopy-group` | Canopy Group | Nature |
+| `nature/cliff` | Cliff | Nature |
+| `nature/copse-impostor` | Copse Impostor | Nature |
+| `nature/flora-cypress` | Cypress · physical flora | Nature |
+| `nature/grass` | Grass | Nature |
+| `nature/mountain-rock` | Mountain Rock | Nature |
+| `nature/flora-oak` | Oak · physical flora | Nature |
+| `nature/flora-olive` | Olive · physical flora | Nature |
+| `nature/flora-orchard` | Orchard · physical flora | Nature |
+| `nature/flora-palm` | Palm · physical flora | Nature |
+| `nature/flora-pine` | Pine · physical flora | Nature |
+| `nature/flora-reed` | Reed · physical flora | Nature |
+| `nature/river-bank` | River Bank | Nature |
+| `nature/sheep` | Sheep · production livestock | Nature |
+| `nature/tree-birch` | Tree Birch | Nature |
+| `nature/tree-oak` | Tree Oak | Nature |
+| `nature/tree-pine` | Tree Pine | Nature |
+| `nature/flora-weirwood` | Weirwood · physical flora | Nature |
+| `nature/flora-willow` | Willow · physical flora | Nature |
+| `props/composed-arena-ruin` | Arena Ruin · composer module | Props |
+| `props/vfx-arrow-volley` | Arrow Volley · animated effect | Effects |
+| `props/composed-awning` | Awning · composer module | Props |
+| `props/vfx-banner-fall` | Banner Fall · animated effect | Effects |
+| `props/composed-barn` | Barn · composer module | Props |
+| `props/barrel` | Barrel | Props |
+| `props/composed-beacon-stone` | Beacon Stone · composer module | Props |
+| `props/composed-beacon-timber` | Beacon Timber · composer module | Props |
+| `props/composed-boat-small` | Boat Small · composer module | Props |
+| `props/composed-bridge-tower` | Bridge Tower · composer module | Props |
+| `props/composed-cairn` | Cairn · composer module | Props |
+| `props/camp` | Camp | Props |
+| `props/composed-cart` | Cart · composer module | Props |
+| `props/composed-castle-keep` | Castle Keep · composer module | Props |
+| `props/castle-life` | Castle life · torches & smoke | Props |
+| `props/vfx-charge-dust` | Charge Dust · animated effect | Effects |
+| `props/skiff` | Coastal fishing skiff | Props |
+| `props/composed-crane` | Crane · composer module | Props |
+| `props/crown` | Crown | Props |
+| `props/composed-dome` | Dome · composer module | Props |
+| `props/vfx-dragon-breath` | Dragon Breath · animated effect | Effects |
+| `props/dragon-scorch` | Dragon scorch · terrain decal | Effects |
+| `props/composed-drowned-arch` | Drowned Arch · composer module | Props |
+| `props/composed-fence` | Fence · composer module | Props |
+| `props/vfx-fire-burst` | Fire Burst · animated effect | Effects |
+| `props/composed-fountain` | Fountain · composer module | Props |
+| `props/composed-haystack` | Haystack · composer module | Props |
+| `props/hearth` | Hearth | Props |
+| `props/composed-hedge` | Hedge · composer module | Props |
+| `props/composed-house-flat-dome` | House Flat Dome · composer module | Props |
+| `props/composed-house-gable-low` | House Gable Low · composer module | Props |
+| `props/composed-house-gable-steep` | House Gable Steep · composer module | Props |
+| `props/composed-house-tall` | House Tall · composer module | Props |
+| `props/composed-house-turf-long` | House Turf Long · composer module | Props |
+| `props/composed-inn` | Inn · composer module | Props |
+| `props/composed-livestock` | Livestock · composer module | Props |
+| `props/vfx-melee-sparks` | Melee Sparks · animated effect | Effects |
+| `props/composed-mill` | Mill · composer module | Props |
+| `props/composed-mine-head` | Mine Head · composer module | Props |
+| `props/composed-monument` | Monument · composer module | Props |
+| `props/composed-olive-row` | Olive Row · composer module | Props |
+| `props/composed-palace-gallery` | Palace Gallery · composer module | Props |
+| `props/composed-palace-low` | Palace Low · composer module | Props |
+| `props/composed-palisade` | Palisade · composer module | Props |
+| `props/person` | Person | Props |
+| `props/composed-pier-timber` | Pier Timber · composer module | Props |
+| `props/composed-pool` | Pool · composer module | Props |
+| `props/composed-quay-stone` | Quay Stone · composer module | Props |
+| `props/composed-red-temple` | Red Temple · composer module | Props |
+| `props/vfx-retreat-dust` | Retreat Dust · animated effect | Effects |
+| `props/composed-rock-spur` | Rock Spur · composer module | Props |
+| `props/composed-salt-heap` | Salt Heap · composer module | Props |
+| `props/composed-sea-stack` | Sea Stack · composer module | Props |
+| `props/composed-sept-large` | Sept Large · composer module | Props |
+| `props/composed-sept-small` | Sept Small · composer module | Props |
+| `props/vfx-ship-ram` | Ship Ram · animated effect | Effects |
+| `props/ship-wakes` | Ship wakes · bounded foam trails | Effects |
+| `props/vfx-siege-smoke` | Siege Smoke · animated effect | Effects |
+| `props/composed-spoil` | Spoil · composer module | Props |
+| `props/composed-standing-stone` | Standing Stone · composer module | Props |
+| `props/composed-stilt-house` | Stilt House · composer module | Props |
+| `props/composed-stone-arch` | Stone Arch · composer module | Props |
+| `props/stone-bridge` | Stone bridge · arched crossing | Props |
+| `props/quay-stone` | Stone quay | Props |
+| `props/pier-timber` | Timber pier | Props |
+| `props/composed-timber-trestle` | Timber Trestle · composer module | Props |
+| `props/strategic-tokens` | Tokens · injected order & power faces | Tokens |
+| `props/composed-tower-broken` | Tower Broken · composer module | Props |
+| `props/composed-vine-row` | Vine Row · composer module | Props |
+| `props/composed-wall-low` | Wall Low · composer module | Props |
+| `props/composed-wall-stump` | Wall Stump · composer module | Props |
+| `props/composed-wall-tower` | Wall Tower · composer module | Props |
+| `props/composed-watchtower` | Watchtower · composer module | Props |
+| `props/composed-water-gardens-palace` | Water Gardens Palace · composer module | Props |
+| `props/composed-well` | Well · composer module | Props |
+| `props/composed-windmill` | Windmill · composer module | Props |
+| `props/composed-yard-wall` | Yard Wall · composer module | Props |
+| `materials/masonry-0` | CC0 Castle wall slates | Materials |
+| `materials/masonry-1` | CC0 Clay roof tiles | Materials |
+| `materials/terrain-4` | CC0 Coast sand | Materials |
+| `materials/terrain-3` | CC0 Dirt | Materials |
+| `materials/terrain-2` | CC0 Farm furrows | Materials |
+| `materials/terrain-0` | CC0 Leafy grass | Materials |
+| `materials/metal` | CC0 Metal | Materials |
+| `materials/paper` | CC0 Paper | Materials |
+| `materials/terrain-5` | CC0 Rock face | Materials |
+| `materials/terrain-1` | CC0 Sparse grass | Materials |
+| `materials/stone` | CC0 Stone | Materials |
+| `materials/wood` | CC0 Wood | Materials |
+| `materials/canopy-atlas` | Forest canopy · procedural atlas | Materials |
+| `materials/ice-wall` | Ice wall · 213 metres | Materials |
+| `materials/ocean-rings` | Ocean · adaptive concentric mesh | Materials |
+| `materials/water-environment` | Water · procedural radiance | Materials |
+| `materials/animated-water` | Water · production waves & Fresnel | Materials |
+| `materials/procedural-finish` | Wood & paper · procedural fallback | Materials |
+| `heraldry/banner` | Injectable banner | Heraldry |
+| `scale/production` | Production scale lineup | Scale |
+
+</details>
+
+## Frozen source audit
+
+Audited source: `d594e1c1`, the read-only tabletop snapshot. Every file under that snapshot is accounted for below, including all GLB/WebP/KTX2 binaries. Paths are relative to `src/client/tabletop/`. “Extracted” means visual code or a required dependency exists in this library; it does not mean every original world integration policy was copied. “Replaced” identifies game army adapters superseded by the standalone company API in `src/armies/`.
 
 ## What can be explored
 
@@ -10,9 +299,9 @@ All ten castle styles, all 24 named seat recipes, all seven physical city recipe
 
 Terrain streaming and world placement remain outside this library. The full terrain shader, sky/underwater/refraction policies and field masks depend on game-wide geography, preferences or global state. Their reusable texture arrays, water shader, adaptive ocean topology, flora and standalone prop/building art are included. The synthetic sampler demonstrates those building blocks without importing game regions or game state. Source order/power artwork outside this snapshot is not copied; the token API accepts host-provided faces. No additional runtime art pack is bundled under realism/assets.
 
-Army-owned files are read-only and their optional scene integration was skipped. Existing army reference stories remain in the gallery. No game repository or other worktree was edited.
+The integrated army domain includes instanced companies, motion, budgets and comparisons. The wildling domain includes a public threat track and presentation hooks. Frozen game adapters are documented for provenance; neither hidden game state nor host placement policy is imported.
 
-File inventory: 292 excluded, 118 extracted, 14 other owner; **424 files total**.
+File inventory: 292 excluded, 118 extracted, 14 replaced; **424 files total**.
 
 | Frozen source | Status | Destination or reason |
 |---|---|---|
@@ -92,10 +381,10 @@ File inventory: 292 excluded, 118 extracted, 14 other owner; **424 files total**
 | `realism/cities/plane.ts` | Extracted | src/cities/settlements/plane.ts |
 | `realism/cities/tests/PhysicalLayout.test.ts` | Excluded | Source test/fixture, not a runtime visual asset; gallery validates extracted builders separately. |
 | `realism/cities/types.ts` | Extracted | src/cities/settlements/types.ts |
-| `realism/crowds/ArmyLayer.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/crowds/archetypes.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/crowds/loadLivingUnits.js` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/crowds/vat.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
+| `realism/crowds/ArmyLayer.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/crowds/archetypes.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/crowds/loadLivingUnits.js` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/crowds/vat.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
 | `realism/dragons/DragonPresence.ts` | Excluded | Not copied: game unit identity, hidden/revealed region state and event orchestration. Standalone rig/material/flight/fire/patrol math are extracted. |
 | `realism/dragons/README.md` | Excluded | Source documentation, application styling or legacy type augmentation; native library docs/types replace it. |
 | `realism/dragons/createDragon.ts` | Extracted | src/dragons/createDragon.ts |
@@ -111,17 +400,17 @@ File inventory: 292 excluded, 118 extracted, 14 other owner; **424 files total**
 | `realism/dragons/tests/presence.test.ts` | Excluded | Source test/fixture, not a runtime visual asset; gallery validates extracted builders separately. |
 | `realism/dragons/types.ts` | Extracted | src/dragons/types.ts |
 | `realism/heraldry/SigilAtlas.ts` | Excluded | Atlas loads protected HUD house artwork and its game substitution rules. Neutral injectable heraldry and token atlases replace that path. |
-| `realism/hosts/GarrisonLayout.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/HostLaw.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/HostLayer.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/HostLod.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/HostPlanner.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/LivingStress.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
+| `realism/hosts/GarrisonLayout.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/HostLaw.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/HostLayer.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/HostLod.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/HostPlanner.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/LivingStress.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
 | `realism/hosts/README.md` | Excluded | Source documentation, application styling or legacy type augmentation; native library docs/types replace it. |
-| `realism/hosts/geometry.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/index.ts` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/load.js` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
-| `realism/hosts/loadHosts.js` | Other owner | Production army/host/VAT prototype: rf-armies owns the replacement API and stories; intentionally untouched by rf-kit. |
+| `realism/hosts/geometry.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/index.ts` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/load.js` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
+| `realism/hosts/loadHosts.js` | Replaced | Game army/host/VAT adapter; superseded by the standalone `src/armies/` API and its gallery studies. |
 | `realism/integration/LivingUnits.ts` | Excluded | Game integration, preferences, event/visibility/LOD or camp placement policy; standalone visual builders use injected public inputs. |
 | `realism/integration/README.md` | Excluded | Source documentation, application styling or legacy type augmentation; native library docs/types replace it. |
 | `realism/integration/cities.ts` | Excluded | Game integration, preferences, event/visibility/LOD or camp placement policy; standalone visual builders use injected public inputs. |
@@ -175,14 +464,14 @@ File inventory: 292 excluded, 118 extracted, 14 other owner; **424 files total**
 | `scene/geometry/CastleBank.ts` | Extracted | src/castles/CastleBank.ts |
 | `scene/geometry/CastleBuilder.ts` | Extracted | src/castles/CastleBuilder.ts |
 | `scene/geometry/CastleDetails.ts` | Extracted | src/castles/CastleDetails.ts |
-| `scene/geometry/CastleGodswood.ts` | Extracted | src/castles/CastleGodswood.ts |
+| `scene/geometry/CastleGodswood.ts` | Extracted | src/castles/SacredGrove.ts |
 | `scene/geometry/CastleLife.ts` | Extracted | src/castles/CastleLife.ts |
 | `scene/geometry/CastleMaterial.ts` | Extracted | src/materials/CastleMaterial.ts |
 | `scene/geometry/CastleNeighborhood.ts` | Extracted | src/castles/CastleNeighborhood.ts |
-| `scene/geometry/CastlePyke.ts` | Extracted | src/castles/CastlePyke.ts |
+| `scene/geometry/CastlePyke.ts` | Extracted | src/castles/IslandFortress.ts |
 | `scene/geometry/CastleSettlement.ts` | Extracted | src/cities/CastleSettlement.ts |
 | `scene/geometry/CastleSites.ts` | Extracted | src/castles/CastleSites.ts |
-| `scene/geometry/CastleVale.ts` | Extracted | src/castles/CastleVale.ts |
+| `scene/geometry/CastleVale.ts` | Extracted | src/castles/HighlandCastle.ts |
 | `scene/geometry/DragonSculpt.ts` | Extracted | src/pieces/geometry/DragonSculpt.ts |
 | `scene/geometry/HarborGeometry.ts` | Extracted | src/cities/HarborGeometry.ts |
 | `scene/geometry/IceWallMaterial.ts` | Extracted | src/materials/IceWallMaterial.ts |
@@ -200,8 +489,8 @@ File inventory: 292 excluded, 118 extracted, 14 other owner; **424 files total**
 | `scene/geometry/complex/ComplexPlan.ts` | Extracted | src/cities/ComplexPlan.ts |
 | `scene/geometry/complex/CrownSeatArt.ts` | Extracted | src/cities/CrownSeatArt.ts |
 | `scene/geometry/complex/CrownSeatRecipes.ts` | Extracted | src/cities/CrownSeatRecipes.ts |
-| `scene/geometry/complex/IronIslandDressing.ts` | Extracted | src/cities/IronIslandDressing.ts |
-| `scene/geometry/complex/IronIslandSeats.ts` | Extracted | src/cities/IronIslandSeats.ts |
+| `scene/geometry/complex/IronIslandDressing.ts` | Extracted | src/cities/IslandDressing.ts |
+| `scene/geometry/complex/IronIslandSeats.ts` | Extracted | src/cities/IslandSeats.ts |
 | `scene/geometry/complex/README.md` | Excluded | Source documentation, application styling or legacy type augmentation; native library docs/types replace it. |
 | `scene/geometry/complex/WallArt.ts` | Extracted | src/cities/WallArt.ts |
 | `scene/geometry/complex/WallProfile.ts` | Extracted | src/cities/WallProfile.ts |

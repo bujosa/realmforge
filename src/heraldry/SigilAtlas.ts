@@ -25,7 +25,7 @@ export class SigilAtlas {
     this.texture.anisotropy = Math.max(1, Math.min(8, maxAnisotropy));
   }
 
-  // UVs exclude the gutter; resolve Bolton on access, even after a UI swap.
+  // UVs exclude the gutter; resolve the alternate palette on access, even after a UI swap.
   uv(house: string): { u0: number; v0: number; u1: number; v1: number } {
     const index = houses.indexOf(sigilIdentity(house));
     const x = index % 4 * cell, y = Math.floor(index / 4) * cell;

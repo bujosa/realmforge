@@ -87,7 +87,7 @@ function palaceTower(b: CastleBuilder, x: number, z: number, base: number, h: nu
   }
 }
 
-export function buildEyrie(b: CastleBuilder): number {
+export function buildHighlandPalace(b: CastleBuilder): number {
   const p = b.palette;
   rockySpire(b);
   terrace(b, [[-0.135, -0.094], [-0.095, -0.122], [0.098, -0.122], [0.139, -0.072], [0.139, 0.074], [0.105, 0.102], [-0.106, 0.102], [-0.137, 0.065]], 0.321, 0.347, p.stone);

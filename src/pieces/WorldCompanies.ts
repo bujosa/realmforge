@@ -146,7 +146,7 @@ export default class WorldCompanies {
   private atlas = new SigilAtlas();
   private time = { value: 0 };
   private life = { value: 0 };
-  private bolton = { value: 0 };
+  private identitySwap = { value: 0 };
   private until = 0;
   private materials = new Map<string, THREE.MeshStandardMaterial>();
   private tints = new WeakMap<THREE.Material, THREE.Color>();
@@ -165,7 +165,7 @@ export default class WorldCompanies {
       return `if (distance(vArmyTint, vec3(${c.r.toFixed(7)},${c.g.toFixed(7)},${c.b.toFixed(7)})) < 0.001) index = ${i.toFixed(1)};`;
     }).join("\n");
     material.onBeforeCompile = shader => {
-      Object.assign(shader.uniforms, { armyTint: { value: tint }, armyAtlas: { value: this.atlas.texture }, armyTime: this.time, armyLife: this.life, armyBolton: this.bolton });
+      Object.assign(shader.uniforms, { armyTint: { value: tint }, armyAtlas: { value: this.atlas.texture }, armyTime: this.time, armyLife: this.life, armyIdentitySwap: this.identitySwap });
       shader.vertexShader = `attribute vec4 army; uniform vec3 armyTint; uniform float armyTime; uniform float armyLife;
         varying vec3 vArmyTint; varying vec2 vArmyBadge; varying float vArmyPaint;\n` + shader.vertexShader;
       shader.vertexShader = shader.vertexShader.replace("#include <color_vertex>", `#include <color_vertex>
@@ -183,14 +183,14 @@ export default class WorldCompanies {
         float wave = sin(armyTime * 2.4 + phase + position.x * 22.0 + position.y * 9.0);
         if (army.y > 0.0) transformed.z += wave * 0.006 * armyLife * army.y;
         if (army.y < -0.5) transformed.x += sin(armyTime * 1.7 + phase) * 0.003 * armyLife * smoothstep(0.1, 0.4, position.y);`);
-      shader.fragmentShader = `uniform sampler2D armyAtlas; uniform float armyBolton;
+      shader.fragmentShader = `uniform sampler2D armyAtlas; uniform float armyIdentitySwap;
         varying vec3 vArmyTint; varying vec2 vArmyBadge; varying float vArmyPaint;\n` + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
         diffuseColor.rgb *= mix(vec3(1.0), vArmyTint, vArmyPaint);
         if (vArmyBadge.x >= 0.0 && vArmyBadge.y >= 0.0) {
           float index = 9.0;
           ${palette}
-          if (index < 0.5 && armyBolton > 0.5) index = 8.0;
+          if (index < 0.5 && armyIdentitySwap > 0.5) index = 8.0;
           vec2 tile = vec2(mod(index, 4.0), 3.0 - floor(index / 4.0));
           float mark = texture2D(armyAtlas, (tile + vec2(0.0625) + vArmyBadge * 0.875) / 4.0).a;
           vec3 ink = index == 2.0 || index == 5.0 ? vec3(0.025, 0.022, 0.025) : vec3(0.82, 0.70, 0.43);
@@ -213,7 +213,7 @@ export default class WorldCompanies {
   cue(clock: number): void { this.until = clock + 4000; }
 
   render(clock: number, enabled: boolean, reduced: boolean, paused: boolean, emission: number): boolean {
-    this.bolton.value = sigilIdentity("stark") == "bolton" ? 1 : 0;
+    this.identitySwap.value = sigilIdentity("stark") == "bolton" ? 1 : 0;
     this.materials.forEach(m => { m.emissiveIntensity = emission; });
     if (reduced || !enabled) { this.life.value = 0; this.until = 0; return false; }
     this.time.value = clock / 1000;

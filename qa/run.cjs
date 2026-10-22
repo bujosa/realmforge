@@ -1,16 +1,15 @@
-/* Visual QA only. Uses the approved existing Playwright install; no added dependency. */
+/* Headless visual review using the local Playwright devDependency. */
 const fs = require('node:fs');
 const path = require('node:path');
-const os = require('node:os');
 const { execFileSync } = require('node:child_process');
-const { chromium, webkit } = require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
+const { chromium, webkit } = require('playwright');
 const { withServer, evidence } = require('./server.cjs');
 let base;
-const out = path.resolve(process.env.QA_OUTPUT_DIR || path.join(evidence, 'r2-final'));
+const out = evidence;
 fs.mkdirSync(out, { recursive: true });
 const slug = value => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
-const summary = { date: new Date().toISOString(), host: os.hostname(), uptime: execFileSync('uptime', { encoding: 'utf8' }).trim(), runs: [], errors: [] };
+const summary = { date: new Date().toISOString(), uptime: execFileSync('uptime', { encoding: 'utf8' }).trim(), runs: [], errors: [] };
 console.log(summary.uptime);
 withServer(async ownedBase => {
   base = ownedBase; summary.base = base;
@@ -33,10 +32,10 @@ withServer(async ownedBase => {
         for (const story of stories) {
           const start = performance.now();
           try {
-            await page.evaluate(id => { location.hash = `#${id}`; }, story.id);
+            await page.evaluate(id => { location.hash = `#${id}${id.startsWith("wildlings/") ? "?camera=Free+orbit" : ""}`; }, story.id);
             await page.waitForFunction(id => document.body.dataset.ready === id && window.__realmforge.ready(), story.id, { timeout: 30000 });
             await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-            if (story.category === 'Materials') await page.waitForTimeout(500);
+            if (['Materials', 'Effects', 'Dragons'].includes(story.category)) await page.waitForTimeout(story.category === 'Effects' ? 350 : story.category === 'Dragons' ? 1800 : 500);
             const stats = await page.evaluate(() => window.__realmforge.stats());
             const corners = await page.evaluate(() => window.__realmforge.framing());
             const framed = corners.every(p => Math.abs(p.x) < 1 && Math.abs(p.y) < 1 && p.z < 1 && p.z > -1);
@@ -84,7 +83,7 @@ withServer(async ownedBase => {
         for (const [category, items] of thumbnails) {
           const cols = 4, width = 1200, rows = Math.ceil(items.length / cols);
           await contact.setViewportSize({ width, height: Math.max(300, 90 + rows * 245) });
-          await contact.setContent(`<html><style>*{box-sizing:border-box}body{margin:0;padding:22px;background:#182021;color:#eadfc6;font:13px system-ui}h1{font:25px Georgia;margin:0 0 6px}p{color:#a6b4a4;margin:0 0 18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:#28322e;border:1px solid #455245;border-radius:5px;overflow:hidden}img{width:100%;height:190px;object-fit:contain;background:#879277}.label{padding:9px 10px;height:40px}</style><h1>Realmforge · ${escape(category)}</h1><p>${engine} · ${form} ${viewport.width}×${viewport.height} · ${items.length} studies · JPEG q72</p><div class="grid">${items.map(item => `<div class="card"><img src="${item.image}"><div class="label">${escape(item.title)}</div></div>`).join('')}</div></html>`);
+          await contact.setContent(`<html><head><style>*{box-sizing:border-box}body{margin:0;padding:22px;background:#182021;color:#eadfc6;font:13px system-ui}h1{font:25px Georgia;margin:0 0 6px}p{color:#a6b4a4;margin:0 0 18px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:#28322e;border:1px solid #455245;border-radius:5px;overflow:hidden}img{width:100%;height:190px;object-fit:contain;background:#879277}.label{padding:9px 10px;height:40px}</style></head><body><h1>Realmforge · ${escape(category)}</h1><p>${engine} · ${form} ${viewport.width}×${viewport.height} · ${items.length} studies · JPEG q72</p><div class="grid">${items.map(item => `<div class="card"><img src="${item.image}"><div class="label">${escape(item.title)}</div></div>`).join('')}</div></body></html>`);
           await contact.locator('img').evaluateAll(images => Promise.all(images.map(image => image.decode())));
           await contact.screenshot({ path: path.join(out, `contact-${slug(category)}-${engine}-${form}.jpg`), type: 'jpeg', quality: 72, fullPage: true });
         }

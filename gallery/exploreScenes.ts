@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { cityStudy } from "./cityStudy";
-import { seatObject } from "./stories/kit";
+import { seatObject } from "./story-kit";
 import { castleGeometry } from "../src/castles/castles";
 import { castleStyle } from "../src/castles/castleStyles";
 import { physicalRecipes } from "../src/presets/physicalCities";

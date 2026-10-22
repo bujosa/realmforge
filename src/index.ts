@@ -49,7 +49,7 @@ export type { HouseLot } from "./cities/settlements/PhysicalKit";
 export type { CityOptions, CityHandle, CityTier, CityDetail } from "./cities/settlements/types";
 export type { PhysicalRecipe } from "./presets/physicalCities";
 
-export { planIslandSeat, planIronIslandSeats as planIslandSeats } from "./cities/IronIslandSeats";
+export { planIslandSeat, planIslandSeats } from "./cities/IslandSeats";
 
 export { dockGeometry, boatGeometry } from "./props/HarborProps";
 export { surfaceMaterial as waterSurfaceMaterial, applyWaterColors, attachCaustics } from "./materials/WaterMaterial";

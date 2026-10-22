@@ -4,9 +4,9 @@ Frozen game revision: `d594e1c1`. Paths on the left are relative to `src/client/
 
 | Game source | Library |
 |---|---|
-| `scene/geometry/CastlePyke.ts` | `src/castles/CastlePyke.ts` |
+| `scene/geometry/CastlePyke.ts` | `src/castles/IslandFortress.ts` |
 | `scene/geometry/nature.ts` | `src/nature/nature.ts` |
-| `scene/geometry/CastleVale.ts` | `src/castles/CastleVale.ts` |
+| `scene/geometry/CastleVale.ts` | `src/castles/HighlandCastle.ts` |
 | `scene/geometry/ResourceProps.ts` | `src/props/ResourceProps.ts` |
 | `scene/geometry/CastleSettlement.ts` | `src/cities/CastleSettlement.ts` |
 | `scene/geometry/CastleLife.ts` | `src/castles/CastleLife.ts` |
@@ -14,7 +14,7 @@ Frozen game revision: `d594e1c1`. Paths on the left are relative to `src/client/
 | `scene/geometry/NaturalTrees.ts` | `src/nature/NaturalTrees.ts` |
 | `scene/geometry/IceWallMaterial.ts` | `src/materials/IceWallMaterial.ts` |
 | `scene/geometry/hboCastles.ts` | `src/castles/landmarkCastles.ts` |
-| `scene/geometry/CastleGodswood.ts` | `src/castles/CastleGodswood.ts` |
+| `scene/geometry/CastleGodswood.ts` | `src/castles/SacredGrove.ts` |
 | `scene/geometry/castles.ts` | `src/castles/castles.ts` |
 | `scene/geometry/CastleDetails.ts` | `src/castles/CastleDetails.ts` |
 | `scene/geometry/castleBanner.ts` | `src/castles/castleBanner.ts` |
@@ -31,8 +31,8 @@ Frozen game revision: `d594e1c1`. Paths on the left are relative to `src/client/
 | `scene/geometry/complex/WallProfile.ts` | `src/cities/WallProfile.ts` |
 | `scene/geometry/complex/ComplexPlan.ts` | `src/cities/ComplexPlan.ts` |
 | `scene/geometry/complex/ComplexLayer.ts` | `src/cities/ComplexLayer.ts` |
-| `scene/geometry/complex/IronIslandSeats.ts` | `src/cities/IronIslandSeats.ts` |
-| `scene/geometry/complex/IronIslandDressing.ts` | `src/cities/IronIslandDressing.ts` |
+| `scene/geometry/complex/IronIslandSeats.ts` | `src/cities/IslandSeats.ts` |
+| `scene/geometry/complex/IronIslandDressing.ts` | `src/cities/IslandDressing.ts` |
 | `scene/geometry/complex/ComplexMaterial.ts` | `src/cities/ComplexMaterial.ts` |
 | `scene/geometry/complex/CrownSeatArt.ts` | `src/cities/CrownSeatArt.ts` |
 | `scene/geometry/complex/WallArt.ts` | `src/cities/WallArt.ts` |

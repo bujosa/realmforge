@@ -88,7 +88,7 @@ export interface ComplexGround {
 
 export interface ComplexSite {
   id: string;
-  /** landmarkKind(): castle, stronghold, winterfell, kings-landing, casterly-rock, … */
+  /** landmarkKind(): castle, stronghold, preset landmark key */
   kind: string;
   level: number;
   style: CastleStyle;
@@ -208,7 +208,7 @@ function circle(n: number, r: number, cz: number, phase = 0, squash = 1): Vec2[]
 
 /** Authored recipe (metres, fit 1) for a castle seat. */
 /** Original Tarly seat, shared by the Marches scenery recipe; no gameplay seat is added. */
-export function hornHillStructures(): Structure[] {
+export function hillFortStructures(): Structure[] {
   return [
     ...ward(54, -48, 44, 12, 3.5, { r: 6, h: 20, round: false, roof: "pyramid" }, { r: 6, h: 18, w: 9 }),
     { type: "keep", x: -8, z: -20, w: 27, d: 24, h: 32, roof: "pyramid", turrets: true },
@@ -267,7 +267,7 @@ function draft(site: ComplexSite, rule: StyleRule, rand: () => number): Draft | 
     return { recipe: "eyrie", structures, switchMetres: 60, outline: ringOutline(26), hero: "needles" };
   }
   if (kind == "casterly-rock") {
-    // Summit fortress carved into the Rock (the Rock itself is the hero).
+    // Summit fortress carved into the headland (the headland itself is the hero).
     const structures = ward(56, -44, 38, 12, 4, { r: 6, h: 22, round: false, roof: "none" }, { r: 5.5, h: 18, w: 9 }, 1);
     structures.push(
       { type: "keep", x: -14, z: -26, w: 26, d: 18, h: 38, roof: "none", turrets: true },
@@ -364,7 +364,7 @@ function draft(site: ComplexSite, rule: StyleRule, rand: () => number): Draft | 
     return { recipe: "moat-cailin", structures, switchMetres: 30, outline: pts.concat(ringOutline(55)) };
   }
   if (kind == "oldtown") {
-    // The Citadel's walled courts; the Hightower is a separate hero on the shore.
+    // The Citadel's walled courts; the the lighthouse is a separate hero on the shore.
     const structures = ward(80, -66, 52, 13, 4, { r: 6, h: 21, round: true, roof: "cone" }, { r: 5.5, h: 19, w: 9 }, 1);
     structures.push(
       { type: "keep", x: -24, z: -42, w: 26, d: 20, h: 32, roof: "cone", turrets: false },
@@ -388,7 +388,7 @@ function draft(site: ComplexSite, rule: StyleRule, rand: () => number): Draft | 
   }
   if (kind == "yronwood") {
     // Low, broad sandstone gate fortress: square bastions and a massive keep,
-    // distinct from Sunspear's slender spear and domed palace.
+    // distinct from the desert seat's slender spear and domed palace.
     const structures = ward(94, -82, 64, 19, 7, { r: 10, h: 29, round: false, roof: "none" }, { r: 8, h: 27, w: 14 }, 1);
     structures.push(
       { type: "keep", x: -24, z: -44, w: 42, d: 34, h: 40, roof: "none", turrets: true },
@@ -498,7 +498,7 @@ function volumeOf(s: Seated): Volume {
 /**
  * Authored reach of a seat's complex around its anchor (metres, fit 1, +10 %),
  * for neighbours that must keep clear of it (cities, settlements). Lifted
- * complexes (the Eyrie's palace, the Rock's summit) leave the anchor's ground
+ * complexes (the highland palace's palace, the headland's summit) leave the anchor's ground
  * to the miniature and report nothing.
  */
 export function complexReach(kind: string, level: number, style: CastleStyle): ComplexPlan["extents"] | undefined {
@@ -518,7 +518,7 @@ export function complexReach(kind: string, level: number, style: CastleStyle): C
 
 const reaches = new Map<string, ComplexPlan["extents"] | undefined>();
 
-/** Search for the hero's own seat (shore for the Hightower, coast for the Rock). */
+/** Search for the hero's own seat (shore for the the lighthouse, coast for the headland). */
 function placeHero(kind: "hightower" | "needles" | "rock", site: ComplexSite, extents: ComplexPlan["extents"], ground: ComplexGround, rand: () => number): HeroPlan | undefined {
   const own = (x: number, z: number): boolean => !ground.own || ground.own(x, z);
   // Prefer the side facing the seat's own harbour (public slots), when known.
@@ -553,7 +553,7 @@ function placeHero(kind: "hightower" | "needles" | "rock", site: ComplexSite, ex
         if (kind == "hightower") {
           const disc = [[0, 0], [radius, 0], [-radius, 0], [0, radius], [0, -radius]];
           if (disc.some(([dx, dz]) => ground.wet(x + dx, z + dz)) || !own(x, z) || ground.reserved(x, z, 120)) continue;
-          // Nearest open water: the Hightower stands on the shore of the river mouth.
+          // Nearest open water: the the lighthouse stands on the shore of the river mouth.
           let shore = Infinity;
           for (let d = 40; d <= 360 && shore == Infinity; d += 40) {
             for (let j = 0; j < 12; j++) if (ground.wet(x + Math.sin(j * Math.PI / 6) * d, z + Math.cos(j * Math.PI / 6) * d)) { shore = d; break; }
@@ -595,7 +595,7 @@ function placeHero(kind: "hightower" | "needles" | "rock", site: ComplexSite, ex
 }
 
 /**
- * How far the Rock's strata step in at height fraction t (fraction of the
+ * How far the headland's strata step in at height fraction t (fraction of the
  * footprint radius): a broad shoulder to ~55 % of the height, then the upper
  * beds draw in toward a summit of ~350 × 190 m (fortress, galleries, curtain).
  */
@@ -609,18 +609,18 @@ export function rockDrift(rx: number, t: number): number {
   return rx * rockShrink(t) * 0.85;
 }
 
-/** Centre of the Rock's summit (local metres around the castle anchor), where its fortress stands. */
+/** Centre of the headland's summit (local metres around the castle anchor), where its fortress stands. */
 export function rockSummit(hero: Extract<HeroPlan, { kind: "rock" }>): Vec2 {
   const u = rockDrift(hero.rx, 1);
   return [hero.x + u * Math.cos(hero.yaw), hero.z - u * Math.sin(hero.yaw)];
 }
 
-/** Bearing (local x east, z south) of Casterly Rock from Lannisport's castle: west-north-west. */
+/** Bearing (local x east, z south) of the golden headland from the port city's castle: west-north-west. */
 const ROCK_BEARING = Math.PI * 9 / 8;
 
 /**
- * Casterly Rock, hand-placed (director's decision): the headland immediately
- * west / north-west of Lannisport's castle, its long axis running out to sea
+ * the golden headland, hand-placed (director's decision): the headland immediately
+ * west / north-west of the port city's castle, its long axis running out to sea
  * from a short standoff, so the castle and the city stand at its foot. It may
  * stand in the sea (sheer sea cliffs) but never on another land region, a
  * gameplay slot, a harbour or another castle. Candidates are tried in a fixed
@@ -639,7 +639,7 @@ function placeRock(extents: ComplexPlan["extents"], ground: ComplexGround, rand:
         const score = Math.abs(step) * 120 + gap + (1 - f) * 1800;
         if (best && score >= best.score) continue;
         const x = dx * (gap + rx), z = dz * (gap + rx);
-        // The castle's own ward stays clear of the Rock.
+        // The castle's own ward stays clear of the headland.
         const near = Math.hypot(extents.maxX - extents.minX, extents.maxZ - extents.minZ) / 2;
         if (Math.hypot(x, z) - rx < Math.min(near, 60)) continue;
         let blocked = false;
@@ -657,7 +657,7 @@ function placeRock(extents: ComplexPlan["extents"], ground: ComplexGround, rand:
   if (!best) return undefined;
   const { x, z, f, bearing } = best;
   const rx = 400 * f, rz = 240 * f, dx = Math.cos(bearing), dz = Math.sin(bearing);
-  // Seabed under the footprint (the Rock's base) and the sea level (wet samples are below it).
+  // Seabed under the footprint (the headland's base) and the sea level (wet samples are below it).
   let low = Infinity, sea = -Infinity;
   for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) {
     if (i * i / 16 + j * j / 16 > 1.1) continue;
@@ -667,7 +667,7 @@ function placeRock(extents: ComplexPlan["extents"], ground: ComplexGround, rand:
     if (ground.wet(px, pz)) sea = Math.max(sea, h);
   }
   sea = Number.isFinite(sea) ? Math.min(0, sea + 0.8) : Math.min(0, low);
-  // Local +x of the Rock points out to sea along the bearing: yaw = −bearing.
+  // Local +x of the headland points out to sea along the bearing: yaw = −bearing.
   return { kind: "rock", x, z, yaw: -bearing, rx, rz, base: low - 25, height: sea + 360 * Math.sqrt(f), seed, seaward: Math.atan2(dx, dz), sea };
 }
 
@@ -732,7 +732,7 @@ export function planComplex(site: ComplexSite, ground: ComplexGround): ComplexPl
     for (const reach of [1, 2, 3, 4]) for (const side of [0, -0.6, 0.6]) offsets.push([-sx * reach + sz * side, -sz * reach - sx * side]);
   }
   const span = (outline: Vec2[]): number => Math.max(...outline.map(([x, z]) => Math.max(Math.abs(x), Math.abs(z))));
-  // Strict pass first; then a shore pass (Harrenhal on the God's Eye, river
+  // Strict pass first; then a shore pass (the ruined fortress on the God's Eye, river
   // castles): curtains and some towers may stand in the shallows, keeps never.
   // On rugged ×20 ground the first fit that stays dry may straddle a ridge:
   // pass 0 takes the first candidate within RELIEF_METRES of relief, and
@@ -833,7 +833,7 @@ export function planComplex(site: ComplexSite, ground: ComplexGround): ComplexPl
   return undefined;
 }
 
-/** Seats with a canon godswood: trees, and whether a weirwood heart tree (or three, Highgarden) stands in it. */
+/** Seats with a preset sacred grove: trees, and whether a pale heart tree (or three, the garden seat) stands in it. */
 const GODSWOODS: Record<string, { trees: number; hearts: number }> = {
   winterfell: { trees: 16, hearts: 1 }, riverrun: { trees: 7, hearts: 1 }, harrenhal: { trees: 9, hearts: 1 },
   "red-keep": { trees: 6, hearts: 0 }, highgarden: { trees: 6, hearts: 3 }

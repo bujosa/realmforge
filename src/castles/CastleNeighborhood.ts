@@ -124,9 +124,9 @@ function lane(y: Yard, name: string, x0: number, x1: number, z0: number, z1: num
 }
 
 // Each site lays out its own yard. Coordinates are local to the castle origin,
-// gate toward +Z. Winterfell keeps clear of the godswood root strip
+// gate toward +Z. the northern seat keeps clear of the godswood root strip
 // (x .1655..2005, z -.027..0977) and the gate passage (|x| < .05).
-export function winterfellYard(b: CastleBuilder): Footprint[] {
+export function northernSeatYard(b: CastleBuilder): Footprint[] {
   const y = new Yard(b);
   const p = b.palette;
   // Timber and slate: heavier roof pitch than the Riverlands, lighter than the Red Keep.
@@ -140,7 +140,7 @@ export function winterfellYard(b: CastleBuilder): Footprint[] {
   return y.footprints;
 }
 
-export function kingsLandingYard(b: CastleBuilder): Footprint[] {
+export function capitalSeatYard(b: CastleBuilder): Footprint[] {
   const y = new Yard(b);
   const p = b.palette;
   // Low terracotta hip roofs and whitewashed walls, arranged along lanes. The

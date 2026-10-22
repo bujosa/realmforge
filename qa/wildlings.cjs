@@ -1,9 +1,9 @@
 /* Explicit visual, public-contract and performance evidence. No application dependencies added. */
-const {chromium,webkit}=require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
+const {chromium,webkit}=require('playwright');
 const {withWildlingServer}=require('./wildlings-server.cjs');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {execFileSync}=require('node:child_process');
-const root=path.join(process.env.HOME,'.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-wild/r2');
+const root=path.resolve(process.env.QA_OUTPUT_DIR || 'qa-output');
 const out=file=>{const p=path.join(root,file);fs.mkdirSync(path.dirname(p),{recursive:true});return p;};
 const results={timestamp:new Date().toISOString(),errors:[],warnings:[],load:[],engines:{},contracts:{},frameToleranceMs:1.5,vsyncFloorMs:1000/60};
 const levels=[0,2,4,6,8,10,12];

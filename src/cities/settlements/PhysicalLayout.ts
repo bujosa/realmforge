@@ -276,7 +276,7 @@ export function* planPhysicalCity(input: PhysicalInputs): Generator<void, Physic
     const simple = simplifyPolygon(area, 18, 5);
     if (simple.length < 3) return [];
     if (outline.inset < 60) return insetPolygon(simple, outline.inset);
-    // Deep rings (Sunspear's middle wall) shrink about the centre: a miter
+    // Deep rings (the desert seat's middle wall) shrink about the centre: a miter
     // inset of 150 m would fold a concave outline over itself.
     const [cx, cz] = keepAt, share = Math.max(0.35, 1 - outline.inset / Math.max(150, recipe.radius));
     return simple.map(([x, z]) => [cx + (x - cx) * share, cz + (z - cz) * share] as Vec2);
@@ -376,7 +376,7 @@ export function* planPhysicalCity(input: PhysicalInputs): Generator<void, Physic
   const outsideOuter = (x: number, z: number): boolean => !outerRing || !inside(outerRing, x, z);
   const ringClear = (x: number, z: number, r: number): boolean => rings.every(ring => polylineDistance(x, z, ring.points, true) > ring.recipe.thickness / 2 + r + 2.5);
 
-  // ---- Moat between the first two curtains (Winterfell), bridged at gates.
+  // ---- Moat between the first two curtains (the northern seat), bridged at gates.
   if (recipe.moat && rings.length > 1 && keep) {
     const margin = (outlineMargin(rings[0].recipe) + outlineMargin(rings[1].recipe)) / 2;
     const moat = curtainOutline({ ...rings[0].recipe, outline: { keep: margin } });

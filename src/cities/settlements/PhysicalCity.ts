@@ -15,7 +15,7 @@ import { CityTier, Vec2 } from "./types";
 // World ×20 physical city (k = 20 only): plans in slices, then hands the
 // shared kit pool one place per 250 m cell. Each cell is drawn at its own
 // level by camera distance — near (full kit), mid (simplified kit) or far
-// (roof-only roofscape tiles) — so a walk through King's Landing draws the
+// (roof-only roofscape tiles) — so a walk through the capital draws the
 // street at full detail and the rest of the city as simplified houses and
 // rows of roofs, with the same handful of pool draws. Static public scenery:
 // no picking; formations only hide the houses they stand on.
@@ -525,7 +525,7 @@ export default class PhysicalCity {
     this.staleCursor = 0;
   }
 
-  /** Coastal centre (Lannisport, Oldtown, …): land-rich ground by the water, `coast` metres from the castle. */
+  /** Coastal centre (the port city, the old city, …): land-rich ground by the water, `coast` metres from the castle. */
   private *coastalCentre(): Generator<void, { x: number; z: number } | undefined, void> {
     const o = this.options, recipe = o.recipe;
     if (recipe.centre == "keep") return o.castle ? { x: o.castle.x, z: o.castle.z } : undefined;

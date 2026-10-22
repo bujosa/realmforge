@@ -124,7 +124,7 @@ export function buildCastleDetails(kind: string, b: CastleBuilder): void {
       }
     });
   } else if (kind == "sunspear" && b.detailed) {
-    // Garden-facing colonnade. Sunspear's unseen exterior remains an original
+    // Garden-facing colonnade. the desert seat's unseen exterior remains an original
     // interpretation; Water Gardens references do not establish its full plan.
     for (let i = 0; i < 5; i++) {
       b.box(0.008, 0.074, 0.024, -0.077 + i * 0.038, 0.060, 0.068, p.trim);

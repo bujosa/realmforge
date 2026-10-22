@@ -17,3 +17,13 @@ The gallery owns free-flight/walking input, collision broad phase, authored walk
 New `dragons/`, `effects/` and `tokens/` domains expose standalone procedural presentation APIs with injected palettes, source textures, public cues and water/ground callbacks. They import three.js and neutral core contracts. Original game identity palettes remain in presets. KTX2 arrays and the dependency's Basis transcoder are loaded per scene with explicit worker/texture disposal; no external URLs or global asset singleton is required.
 
 The full source audit in catalogue.md distinguishes reusable visual assets from game-world terrain, sky, fog, weather and placement policy. This round adds no network/event subscriptions, persistent state, runtime dependencies, repository publishing or migrations. QA is the only temporary server owner and always stops its exact preview child process.
+
+## Public source layout
+
+`src/` is organized by asset domain. Shared contracts, frames, instancing and disposal helpers stay in `core/`; optional labels and authored named recipes stay in `presets/`. `materials/assets/` is the only bundled external art directory, with adjacent provenance and license texts. Class modules use PascalCase and builders/data use camelCase.
+
+Gallery registrars live under `gallery/stories/<domain>/`; mixed legacy registrars were split by subject and the small castle-study helpers moved to `gallery/story-kit.ts`. Castle landmarks and physical seats share one preset traversal to avoid duplicating registration logic. Story IDs and the gallery contract remain stable. The unused frozen world adapter reference was removed; the maintained source audit records the original boundary.
+
+QA runners share one bounded preview owner and use a local devDependency. Public metadata exports TypeScript source and optional subpaths for a bundler. No compiled npm distribution is implied; `private: true` prevents publishing. The optional Pages workflow builds a gallery with the repository-specific base, and deployment only runs when the owner enables Pages and invokes or pushes the workflow.
+
+Neutral internal helpers replace named castle/yards/palette helpers. Deep imports of the old internal CastlePyke/CastleVale/CastleGodswood modules should use IslandFortress/HighlandCastle/SacredGrove; these were never root exports. Internal IronIslandSeats/IronIslandDressing modules similarly become IslandSeats/IslandDressing; the root `planIslandSeats` name stays unchanged. Public `src/armies`, `src/wildlings` and `src/heraldry` signatures and visual geometry are unchanged. Heraldry comment edits only remove named palette references.

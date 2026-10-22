@@ -1,11 +1,11 @@
 // Rendering recipes only. These never add a unit, change its strength or choose
-// a house. Greyjoy's dark cloth, raised prow and shield line follow Belshaw's
+// a house. The maritime palette's dark cloth, raised prow and shield line follow Belshaw's
 // season-six Ironborn production study. Other regional fittings are original
-// design inferences, not claims about a canonical HBO fleet specification.
+// design inferences, not claims about an official fleet specification.
 //
 // Three hull classes are kept distinct without changing the slot envelope:
 // merchant (deep, short, square sail), galleon (raised stern cabin, foresail)
-// and lateen (long, low, raked sail). Greyjoy is a longship: a long narrow hull,
+// and lateen (long, low, raked sail). The maritime palette is a longship: a long narrow hull,
 // a black carved prow and an oar row. Hull length only changes keel station
 // spacing; freeboard only changes topside height.
 export interface ShipProfile {
@@ -97,7 +97,7 @@ const profiles: Record<string, Partial<ShipProfile>> = {
 };
 
 export function shipProfile(house: string, color: string): ShipProfile {
-  // Bolton is a compatibility alias only. The game currently retains the Stark
+  // The alternate palette is a compatibility alias only. The game currently retains the northern palette
   // id when its ADWD name changes; do not guess that identity from paint.
   const profile = profiles[house == "bolton" ? "stark" : house];
   return { ...common, crest: color, ...profile };

@@ -1,9 +1,8 @@
 import * as THREE from "three";
-import { registerStories } from "../registry";
-import { worldMiniatureColor, worldMiniatureGeometry } from "../../src/pieces/miniatures";
-import { companyGeometry } from "../../src/pieces/WorldCompanies";
-import { demoHouses, demoColors, titleCase } from "../../src/presets/demo";
-
+import { registerStories } from "../../registry";
+import { worldMiniatureColor, worldMiniatureGeometry } from "../../../src/pieces/miniatures";
+import { companyGeometry } from "../../../src/pieces/WorldCompanies";
+import { demoHouses, demoColors, titleCase } from "../../../src/presets/demo";
 for (const type of ["footman", "knight", "siege-engine", "ship", "dragon"]) {
   registerStories({
     id: `pieces/${type}`, title: titleCase(type), category: "Pieces",

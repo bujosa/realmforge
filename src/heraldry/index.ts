@@ -20,7 +20,7 @@ const cache = new Map<string, Sigil>();
 // below its previous cost, while the canvas/atlas retains the detailed contour.
 const triangleBudget: Record<string, number> = {
   neutral: 36, stark: 36, lannister: 96, baratheon: 92, greyjoy: 140, tyrell: 240,
-  // Bolton also fits Stark's smaller legacy budget when swapped into that seat.
+  // The alternate palette also fits the northern palette's smaller legacy budget when swapped into that seat.
   martell: 128, arryn: 44, targaryen: 100, bolton: 36
 };
 

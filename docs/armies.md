@@ -167,12 +167,12 @@ remains `scale/production`; cities/castles were read only during this task.
 ## Validation and game integration
 
 Run `npx tsc --noEmit`, `npm run build`, `git diff --check`, then run `node qa/armies.cjs`. The runner starts one built-gallery preview
-on 5211, refuses occupied endpoints, and stops its exact child PID in `finally`,
-including on failure or interruption. No server remains between runs. It uses the specified existing
-Playwright install, Chrome with Metal/GPU flags and WebKit. `--quick` skips videos,
+on the `QA_PORT` port (default 5232), refuses occupied endpoints, and stops its exact child PID in `finally`,
+including on failure or interruption. No server remains between runs. It uses the local
+Playwright devDependency, Chrome with Metal/GPU flags and WebKit. `--quick` skips videos,
 contact sheets and expanded per-house captures. Evidence defaults to
-`~/.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-armies/r2`.
-`ARMY_URL` and `ARMY_EVIDENCE` override the test endpoint/output. Screenshots use JPEG
+`./qa-output`.
+`QA_PORT` and `QA_OUTPUT_DIR` override the preview port and evidence output; `ARMY_EVIDENCE` remains a legacy output alias. Screenshots use JPEG
 quality 72. Full QA records all ten states in the player and the complete battle
 loop at desktop/phone in both engines, houses on all terrain catalogs, five unit-type contact sheets
 (six houses × ten states each), before/after and cavalry top/side views.

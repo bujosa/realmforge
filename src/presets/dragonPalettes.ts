@@ -1,7 +1,7 @@
 import type { DragonPalette } from "../dragons/types";
 
 const HOUSE_PALETTES: Record<string, DragonPalette> = {
-  // Targaryen (the only dragon house in Mother of Dragons): near-black
+  // Dragon demo palette: near-black
   // scales with a warm red undertone, blood-red membranes, bronze belly.
   targaryen: {
     scales: "#211a1c",

@@ -3,9 +3,9 @@ import CastleBuilder from "./CastleBuilder";
 
 // Original study of the screen godswood, rather than a surveyed reconstruction.
 // The pale heart tree and red crown survive both LODs. Its narrow ground court
-// lies between Winterfell's existing inner and outer east curtains; branches
+// lies between the northern seat's existing inner and outer east curtains; branches
 // only spread over the wall after rising above its parapet.
-export function winterfellGodswood(b: CastleBuilder): void {
+export function northernSacredGrove(b: CastleBuilder): void {
   const x = 0.183, z = 0.040, floor = 0.022;
   b.box(0.035, 0.002, 0.108, x, 0.021, 0.035, "#35483c", 0, 7);
   const branch = (a: number[], c: number[], radius: number): void => {

@@ -5,7 +5,7 @@ import { houses, terrains, names, lab, swatch, label, select, toggle } from "./s
 
 for (const type of armyTypes) for (const distance of ["near", "far"] as const) {
   registerStories({
-    id: `armies/${type}-${distance}`, category: "Armies / terrain & heraldry", title: `${names[type]} · ${distance}`,
+    id: `armies/${type}-${distance}`, category: "Armies", title: `${names[type]} · ${distance}`,
     build(ctx) {
       const compact = matchMedia("(max-width:600px)").matches;
       const view = lab(ctx, `${names[type]} / ${distance === "near" ? "material study" : "strategic view"}`, "Six heraldic palettes. Four surfaces. Contrasting edges keep black and white readable; each company carries its identity on cloth and shields.");

@@ -1,12 +1,11 @@
 import * as THREE from "three";
-import { registerStories } from "../registry";
-import KitPool from "../../src/core/KitPool";
-import PhysicalMaterial from "../../src/cities/settlements/PhysicalMaterial";
-import { houseLotInstance, physicalKitVariants, type HouseFamily } from "../../src/cities/settlements/PhysicalKit";
-import { modularCastle } from "../../src/castles/castleKit";
-import AssetMaterials from "../../src/materials/AssetMaterials";
-import CastleMaterial from "../../src/materials/CastleMaterial";
-
+import { registerStories } from "../../registry";
+import KitPool from "../../../src/core/KitPool";
+import PhysicalMaterial from "../../../src/cities/settlements/PhysicalMaterial";
+import { houseLotInstance, physicalKitVariants, type HouseFamily } from "../../../src/cities/settlements/PhysicalKit";
+import { modularCastle } from "../../../src/castles/castleKit";
+import AssetMaterials from "../../../src/materials/AssetMaterials";
+import CastleMaterial from "../../../src/materials/CastleMaterial";
 for (const family of ["gable-steep", "gable-low", "flat-dome", "turf-long", "tower-house", "hall", "court"] as HouseFamily[]) registerStories({
   id: `cities/house-${family}`, title: `House kit · ${family}`, category: "Cities & seats",
   controls: { lod: { type: "select", label: "LOD", default: "near", options: ["near", "mid"] }, height: { type: "number", label: "Height (metres)", default: 7, min: 3, max: 18, step: 1 } },

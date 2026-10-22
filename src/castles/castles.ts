@@ -5,13 +5,13 @@ import { CastleStyle } from "./castleStyles";
 import { buildLandmarkCastle, landmarkCastlePalette } from "./landmarkCastles";
 import { buildCastleSite, castleSites, castleSitePalette } from "./CastleSites";
 import { buildCastleDetails, castleDrawbridge } from "./CastleDetails";
-import { buildEyrie, buildValeSettlement } from "./CastleVale";
+import { buildHighlandPalace, buildValeSettlement } from "./HighlandCastle";
 import { buildIronBank } from "./CastleBank";
-import { buildPyke, pykePalette } from "./CastlePyke";
+import { buildIslandFortress, islandFortressPalette } from "./IslandFortress";
 import { riverrunYard, sunspearYard, genericYard } from "./CastleNeighborhood";
 
 export function castleGeometry(kind: string, style: CastleStyle, variant = 0, detailed = true, kit?: CastleKit, level = 2): THREE.BufferGeometry {
-  const b = new CastleBuilder(style, detailed, kit, kind == "pyke" ? pykePalette : landmarkCastlePalette(kind) ?? castleSitePalette(kind));
+  const b = new CastleBuilder(style, detailed, kit, kind == "pyke" ? islandFortressPalette : landmarkCastlePalette(kind) ?? castleSitePalette(kind));
   const p = b.palette;
   const strong = castleSites[kind]?.strong ?? (kind != "castle");
   const w = strong ? 0.44 : 0.26;
@@ -32,14 +32,14 @@ export function castleGeometry(kind: string, style: CastleStyle, variant = 0, de
   } else if (kind == "iron-bank") {
     plaqueDepth = buildIronBank(b);
   } else if (kind == "pyke") {
-    plaqueDepth = buildPyke(b);
+    plaqueDepth = buildIslandFortress(b);
   } else if (kind == "the-eyrie") {
-    plaqueDepth = buildEyrie(b);
+    plaqueDepth = buildHighlandPalace(b);
   } else if (kind == "the-vale-of-arryn") {
     // Stays on buildValeSettlement (richer than its CastleSites study).
     plaqueDepth = buildValeSettlement(b);
   } else if (castleSites[kind]) {
-    // The 13 regional CastleSites profiles (Harrenhal, Moat Cailin, Seagard...).
+    // The 13 regional CastleSites profiles (the ruined fortress, the marsh fortress, the coastal seat...).
     plaqueDepth = buildCastleSite(kind, b) ?? plaqueDepth;
   } else if (kind == "casterly-rock") {
     b.cliff(0.30, 0.26);
@@ -89,7 +89,7 @@ export function castleGeometry(kind: string, style: CastleStyle, variant = 0, de
     genericYard(b, strong);
   }
   buildCastleDetails(kind, b);
-  // Site profiles seat their own plaque root in CastleSites.ground; Pyke and
+  // Site profiles seat their own plaque root in CastleSites.ground; the island fortress and
   // the Vale settlement build their own rooted toes.
   if (!castleSites[kind] && kind != "pyke" && kind != "the-vale-of-arryn") {
     b.box(0.108, 0.117, 0.057, 0, -0.0315, plaqueDepth);

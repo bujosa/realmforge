@@ -1,6 +1,6 @@
-import { registerStories } from "../registry";
-import { exploreSeat, exploreSampler } from "../exploreScenes";
-import { namedSeats, titleCase } from "../../src/presets/demo";
+import { registerStories } from "../../registry";
+import { exploreSeat, exploreSampler } from "../../exploreScenes";
+import { namedSeats, titleCase } from "../../../src/presets/demo";
 const ids=[...new Set([...namedSeats,"lannisport","gulltown"])];
 for (const id of ids) registerStories({
   id:`explore/${id}`,title:`${titleCase(id)} · inhabited site`,category:"Explore",

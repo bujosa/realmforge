@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
-const { chromium, webkit } = require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
+const { chromium, webkit } = require('playwright');
 const { withServer, evidence } = require('./server.cjs');
 const output = path.join(evidence, 'exploration'); fs.mkdirSync(output, { recursive: true });
 const results = { uptime: execFileSync('uptime', { encoding:'utf8' }).trim(), runs: [], errors: [] };

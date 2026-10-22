@@ -1,22 +1,22 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { paintGeometry } from "../core/sculpt";
+import { box, cyl, cone, type Part } from "./ComposedPrimitives";
+import { detailedBuilders, COMPOSED_DETAIL_TRIANGLE_BUDGET } from "./ComposedDetails";
 import { DRAWABLE_VARIANTS } from "./ComposedVariants";
 
-// Placeholder kit shapes for composed props (K2–K14 except houses). Each is
-// built in a unit footprint (x, z ∈ [-0.5, 0.5], y ∈ [0, 1]) and scaled per
+// Procedural kit shapes for composed props (K2–K14 except houses). Each is
+// built around a unit footprint (x, z ∈ [-0.5, 0.5], y ∈ [0, 1]) and scaled per
 // instance to the item's physical w × h × d. Vertex colours are multipliers
 // of the instance tint (1 = tint, < 1 darker parts such as roofs and timber).
 // Original geometry, no assets. Kit owners replace them through a sink.
-
-/** Geometry, shade multiplier, and whether it takes the instance's roof tint. */
-type Part = [THREE.BufferGeometry, number] | [THREE.BufferGeometry, number, boolean];
 
 const shade = (v: number): string => { const c = Math.round(Math.max(0, Math.min(1, v)) * 255); return `rgb(${c},${c},${c})`; };
 
 function merge(parts: Part[]): THREE.BufferGeometry {
   const painted = parts.map(([g, s, roof]) => {
     const flat = g.index ? g.toNonIndexed() : g;
+    if (flat !== g) g.dispose();
     flat.deleteAttribute("uv");
     flat.deleteAttribute("normal");
     flat.computeVertexNormals();
@@ -24,14 +24,12 @@ function merge(parts: Part[]): THREE.BufferGeometry {
     flat.setAttribute("roofPart", new THREE.Float32BufferAttribute(new Float32Array(count).fill(roof ? 1 : 0), 1));
     return paintGeometry(flat, shade(roof ? 1 : s));
   });
-  const merged = mergeGeometries(painted) ?? painted[0];
+  const merged = mergeGeometries(painted);
+  painted.forEach(part => part.dispose());
+  if (!merged) throw new Error("Could not merge composed prop");
   merged.computeBoundingSphere();
   return merged;
 }
-
-const box = (w: number, h: number, d: number, x = 0, y = 0, z = 0): THREE.BufferGeometry => new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z);
-const cyl = (top: number, bottom: number, h: number, segments: number, x = 0, y = 0, z = 0): THREE.BufferGeometry => new THREE.CylinderGeometry(top, bottom, h, segments).translate(x, y + h / 2, z);
-const cone = (r: number, h: number, segments: number, x = 0, y = 0, z = 0): THREE.BufferGeometry => new THREE.ConeGeometry(r, h, segments).translate(x, y + h / 2, z);
 
 /** Gable house: walls to y = 1 (the item's eave height), roof of `rise` × eave above, ridge along local x. */
 function gableHouse(rise: number, overhang = 0.06): Part[] {
@@ -42,12 +40,11 @@ function gableHouse(rise: number, overhang = 0.06): Part[] {
 }
 
 const builders: Record<string, () => Part[]> = {
+  ...detailedBuilders,
   "house-gable-steep": () => gableHouse(1.05),
   "house-gable-low": () => gableHouse(0.5),
   "house-turf-long": () => gableHouse(0.95, 0.02),
   "house-tall": () => [...gableHouse(0.32), [box(0.3, 0.03, 0.02, 0.15, 0.55, 0.505), 0.5]],
-  barn: () => gableHouse(0.8),
-  inn: () => gableHouse(0.6),
   "castle-keep": () => {
     const parts: Part[] = [[box(1, 0.82, 1), 1], [box(1.04, 0.035, 1.04, 0, 0.78), 0.92],
       [cone(0.73, 0.18, 4, 0, 0.82).rotateY(Math.PI / 4), 1, true],
@@ -80,7 +77,6 @@ const builders: Record<string, () => Part[]> = {
     return parts;
   },
   "tower-broken": () => [[cyl(0.44, 0.5, 0.78, 8), 1], [box(0.45, 0.22, 0.3, 0.12, 0.78, 0), 0.9]],
-  watchtower: () => [[box(0.82, 0.86, 0.82), 1], [box(1, 0.1, 1, 0, 0.86), 0.85], [box(0.25, 0.06, 0.25, 0.3, 0.96, 0.3), 0.8]],
   "wall-stump": () => [[box(1, 0.75, 1), 1], [box(0.45, 0.25, 1, -0.2, 0.75), 0.9]],
   "arena-ruin": () => {
     const parts: Part[] = [];
@@ -90,13 +86,9 @@ const builders: Record<string, () => Part[]> = {
     }
     return parts;
   },
-  "mine-head": () => [[box(0.12, 1, 0.12, -0.4, 0, -0.4), 0.7], [box(0.12, 1, 0.12, 0.4, 0, -0.4), 0.7], [box(0.12, 1, 0.12, -0.4, 0, 0.4), 0.7], [box(0.12, 1, 0.12, 0.4, 0, 0.4), 0.7], [box(1, 0.1, 1, 0, 0.9), 0.6]],
   spoil: () => [[cone(0.5, 1, 9), 1]],
   "standing-stone": () => [[cyl(0.32, 0.5, 1, 5), 1]],
   cairn: () => [[cone(0.5, 1, 6), 1]],
-  windmill: () => [[cyl(0.32, 0.5, 0.62, 8), 1], [cone(0.38, 0.18, 8, 0, 0.62), 1, true],
-    [new THREE.BoxGeometry(0.07, 0.95, 0.03).rotateZ(0.5).translate(0, 0.66, 0.4), 0.7], [new THREE.BoxGeometry(0.07, 0.95, 0.03).rotateZ(-1.07).translate(0, 0.66, 0.4), 0.7]],
-  mill: () => [[box(1, 0.62, 0.86), 1], [box(1.02, 0.38, 0.6, 0, 0.62), 1, true], [cyl(0.32, 0.32, 0.1, 10).rotateX(Math.PI / 2).translate(0.2, 0.32, 0.5), 0.7]],
   fountain: () => [[cyl(0.5, 0.48, 0.16, 12), 1], [cyl(0.42, 0.42, 0.04, 12, 0, 0.16), 1, true],
     [cyl(0.07, 0.11, 0.4, 8, 0, 0.18), 1], [cyl(0.24, 0.12, 0.1, 12, 0, 0.56), 1],
     [cyl(0.015, 0.025, 0.34, 6, 0, 0.66), 1, true]],
@@ -125,13 +117,9 @@ const builders: Record<string, () => Part[]> = {
     for (let k = 0; k < 6; k++) parts.push([new THREE.SphereGeometry(0.09, 6, 4).scale(1, 0.75, 5).translate(-0.42 + k * 0.17, 0.62, 0), 1], [cyl(0.012, 0.016, 0.45, 4, -0.42 + k * 0.17, 0, 0), 0.6]);
     return parts;
   },
-  well: () => [[cyl(0.42, 0.45, 0.4, 8), 1], [box(0.06, 0.55, 0.06, -0.36, 0.4), 0.7], [box(0.06, 0.55, 0.06, 0.36, 0.4), 0.7], [box(0.9, 0.08, 0.5, 0, 0.92), 0.6]],
   awning: () => [[box(0.05, 0.85, 0.05, -0.46, 0, 0.46), 0.6], [box(0.05, 0.85, 0.05, 0.46, 0, 0.46), 0.6], [box(1, 0.04, 1, 0, 0.8).rotateX(-0.18), 1]],
-  cart: () => [[box(0.9, 0.35, 0.8, 0, 0.35), 1], [cyl(0.3, 0.3, 0.06, 10).rotateZ(Math.PI / 2).translate(-0.48, 0.3, 0), 0.6], [cyl(0.3, 0.3, 0.06, 10).rotateZ(Math.PI / 2).translate(0.48, 0.3, 0), 0.6]],
   "pier-timber": () => [[box(1, 0.25, 1, 0, 0.75), 1], [box(0.15, 0.8, 0.04, -0.4, 0, -0.3), 0.6], [box(0.15, 0.8, 0.04, 0.4, 0, -0.3), 0.6], [box(0.15, 0.8, 0.04, -0.4, 0, 0.3), 0.6], [box(0.15, 0.8, 0.04, 0.4, 0, 0.3), 0.6]],
   "quay-stone": () => [[box(1, 1, 1), 1], [box(1, 0.06, 0.08, 0, 1, 0.46), 0.85]],
-  crane: () => [[box(0.4, 0.8, 0.4), 0.85], [box(2.4, 0.08, 0.12, 0.9, 0.82), 0.7], [box(0.03, 0.4, 0.03, 2, 0.42), 0.5]],
-  "boat-small": () => [[box(1, 0.6, 0.86, 0, 0.1), 1], [box(0.84, 0.08, 0.8, 0, 0.62), 0.6]],
   "stone-arch": () => [[box(1, 0.3, 1, 0, 0.7), 1], [box(0.12, 0.7, 1, -0.44, 0), 0.9], [box(0.12, 0.7, 1, 0.44, 0), 0.9], [box(0.1, 0.55, 1, 0, 0.15), 0.85]],
   "timber-trestle": () => [[box(1, 0.2, 1, 0, 0.8), 1], [box(0.04, 0.8, 0.9, -0.3, 0), 0.6], [box(0.04, 0.8, 0.9, 0, 0), 0.6], [box(0.04, 0.8, 0.9, 0.3, 0), 0.6]],
   "bridge-tower": () => [[box(0.9, 0.9, 0.9), 1], [box(1, 0.1, 1, 0, 0.9), 0.85]],
@@ -171,11 +159,15 @@ const cache = new Map<string, THREE.BufferGeometry>();
 
 export function hasShape(variant: string): boolean { return variant in builders && DRAWABLE_VARIANTS.has(variant); }
 
-/** Shared placeholder geometry for a variant (unit footprint). */
+/** Shared cached geometry for a variant (unit footprint). */
 export function shape(variant: string): THREE.BufferGeometry {
   let geometry = cache.get(variant);
   if (!geometry) {
     geometry = merge((builders[variant] ?? builders.watchtower)());
+    if (variant in detailedBuilders && triangles(geometry) > COMPOSED_DETAIL_TRIANGLE_BUDGET) {
+      geometry.dispose();
+      throw new Error(`Composed detail budget exceeded: ${variant}`);
+    }
     cache.set(variant, geometry);
   }
   return geometry;

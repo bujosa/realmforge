@@ -5,7 +5,7 @@ import * as THREE from "three";
 import CastleBuilder from "../castles/CastleBuilder";
 import { ComplexGround } from "./ComplexPlan";
 import { addFadeAttribute } from "./ComplexMaterial";
-import type { IronSeatPlan } from "./IronIslandSeats";
+import type { IronSeatPlan } from "./IslandSeats";
 
 const U = 1 / 50;
 interface Pose { x: number; y: number; z: number; yaw: number; sx?: number; sy?: number; sz?: number }
@@ -103,7 +103,7 @@ function shrine(): THREE.BufferGeometry {
 
 /** Bounded, sliced construction under ComplexLayer's existing frame deadline.
  * All batches share its material; every mesh disables raycast. */
-export default class IronIslandDressing {
+export default class IslandDressing {
   readonly group = new THREE.Group();
   readonly sites: Record<string, Pose[]> = {};
   private steps: Generator<void, void, void>;

@@ -98,7 +98,7 @@ export function floraCover(zone: FloraZone, point: BoardPoint, frame: SceneFrame
   const cover = Math.max(0, Math.min(1, (patch - (1 - profile.cover)) * 5 + 0.45));
   const treeline = Math.max(0, Math.min(1, (profile.treelineM - ground.altitudeM) / 100));
   const slope = Math.max(0, Math.min(1, (0.65 - ground.slope) / 0.35));
-  // Wolfswood occupies the western half; retain a little woodland east of Winterfell.
+  // the western woodland occupies the western half; retain a little woodland east of the northern seat.
   const west = zone.id == "winterfell" && point.x > 290 ? 0.32 : 1;
   return cover * treeline * slope * west;
 }

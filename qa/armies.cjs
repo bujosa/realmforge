@@ -1,12 +1,13 @@
 /* Explicit browser visual/performance evidence runner. Uses the existing game QA install. */
-const { chromium, webkit } = require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
+const { chromium, webkit } = require('playwright');
 const fs = require('node:fs');
 const { withArmyServer } = require('./armies-server.cjs');
+const { base } = require('./server.cjs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const assert = require('node:assert/strict');
-const root = process.env.ARMY_EVIDENCE || path.join(process.env.HOME, '.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-armies/r2');
-const url = process.env.ARMY_URL || 'http://127.0.0.1:5211/';
+const root = process.env.ARMY_EVIDENCE || path.resolve(process.env.QA_OUTPUT_DIR || 'qa-output');
+const url = process.env.ARMY_URL || base;
 const quick = process.argv.includes('--quick');
 const types = ['footman', 'knight', 'siege-engine', 'ship', 'dragon'];
 const houses = ['greyjoy', 'stark', 'lannister', 'baratheon', 'tyrell', 'martell'];

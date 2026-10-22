@@ -6,7 +6,7 @@ import { registerStories } from "../../registry";
 import { houses, lab, swatch, toggle } from "./support";
 
 registerStories({
-  id: "armies/world-scale", title: "World x1 · castle & company scale", category: "Armies / comparison",
+  id: "armies/world-scale", title: "World x1 · castle & company scale", category: "Armies",
   description: "World camera reference: 38° vertical FOV, 20° polar tilt. Proposed footprint: 64 CSS px at 1440×900; 56 CSS px at 390×844. Castle keeps its authored scale; armies use a strategic presentation scale. This is a synthetic scale study, not an integrated game screenshot.",
   build(ctx) {
     const view = lab(ctx, "World presentation scale", "Compare the footprint with authored castle geometry at the World x1 camera angle. Strategic scaling is separate from physical metres.");

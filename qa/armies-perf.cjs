@@ -1,13 +1,15 @@
 /* Full drawing-buffer benchmark, separate from the gallery's smaller stage pane. */
-const { chromium, webkit } = require('/Users/davidbujosa/Documents/Workspace/games/swords-and-ravens-v3-p3/e2e/node_modules/playwright');
+const { chromium, webkit } = require('playwright');
 const { withArmyServer } = require('./armies-server.cjs');
+const { base } = require('./server.cjs');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const root = path.join(process.env.HOME, '.t3/userdata/project-handoffs/swords-v3-realism-20261018/evidence/rf-armies/r2');
+const root = path.resolve(process.env.QA_OUTPUT_DIR || 'qa-output');
+fs.mkdirSync(root, { recursive: true });
 const results = { timestamp: new Date().toISOString(), cases: [], errors: [] };
 let activeBrowser;
-withArmyServer('http://127.0.0.1:5211/', async () => {
+withArmyServer(base, async () => {
   try {
     for (const [engine, launch] of [
       ['chrome', () => chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] })],
@@ -20,7 +22,7 @@ withArmyServer('http://127.0.0.1:5211/', async () => {
         page.on('pageerror', error => results.errors.push({engine, viewport, message:error.message}));
         page.on('console', message => { if(message.type() === 'error') results.errors.push({engine, viewport, message:message.text()}); });
         for (const detail of ['high', 'balanced']) {
-          await page.goto(`http://127.0.0.1:5211/#armies/board-${detail}`);
+          await page.goto(`${base}#armies/board-${detail}`);
           await page.waitForFunction(() => window.__armyQA?.ready);
           await page.evaluate(({width,height}) => {
             const q = window.__armyQA;

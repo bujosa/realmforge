@@ -202,7 +202,7 @@ export function buildCastleSite(kind: string, b: CastleBuilder): number | undefi
     b.garden(-0.07, 0.07, 0.07, 0.07);
   } else if (kind == "volantis") {
     enclosure(b, true, 0.14);
-    // Dark inner-city masonry and a stepped gate, not a second Braavos bank.
+    // Dark inner-city masonry and a stepped gate, not a second the canal city bank.
     b.box(0.33, 0.115, 0.20, 0, 0.0775, -0.025, "#61665c");
     squareTower(b, 0, -0.065, 0.095, 0.085, 0.02, 0.30);
     [-1, 1].forEach(side => {

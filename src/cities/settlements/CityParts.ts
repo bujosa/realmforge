@@ -378,10 +378,10 @@ export function landmarkPart(kind: PhysicalLandmark, style: CityLayoutSpec["styl
   else if (kind == "glass-gardens") glassGardens(b, depth, near);
   else if (kind == "citadel") citadel(b, depth, near);
   else if (kind == "sept") septSmall(b, depth, near);
-  else if (kind == "starry-sept") starrySept(b, depth, near);
-  else if (kind == "wolfs-den") wolfsDen(b, depth, near);
-  else if (kind == "sun-tower") sunTower(b, depth, near);
-  else if (kind == "seal-rock") sealRock(b, depth, near);
+  else if (kind == "starry-sept") vaultedTemple(b, depth, near);
+  else if (kind == "wolfs-den") riverFort(b, depth, near);
+  else if (kind == "sun-tower") domedTower(b, depth, near);
+  else if (kind == "seal-rock") harborRock(b, depth, near);
   else merman(b, depth, near);
   return b.finish();
 }
@@ -393,10 +393,10 @@ export function treePart(style: CityLayoutSpec["style"], h: number, kind: "pine"
   return b.finish();
 }
 
-// Oldtown's Citadel (inferred): a domed hall over a cloister court with two
+// the old city's Citadel (inferred): a domed hall over a cloister court with two
 // lesser domes and a squat tower, pale stone (study, not a copy).
 function citadel(b: CastleBuilder, depth: number, near: boolean): void {
-  // Round 2: Oldtown grey — weathered stone halls under lead domes.
+  // Round 2: the old city grey — weathered stone halls under lead domes.
   const stone = "#aaa69c", dome = "#6f7b7d", n = near ? 14 : 8;
   b.add(new THREE.BoxGeometry(0.15, 0.012 + depth, 0.11).translate(0, -depth / 2, 0), 0, 0.006, 0, "#9b978e");
   // Cloister ranges round a court.
@@ -439,10 +439,10 @@ function merman(b: CastleBuilder, depth: number, near: boolean): void {
 const metre = 1 / 500;
 const mm = (v: number): number => v * metre;
 
-// Oldtown's Starry Sept (inferred; books: the Faith's old seat): a heptagonal
+// the old city's Starry Sept (inferred; books: the Faith's old seat): a heptagonal
 // sept of dark grey stone under slate, seven turrets at the corners, a
 // lantern drum and a tall spire crowned by a gilded seven-pointed star.
-function starrySept(b: CastleBuilder, depth: number, near: boolean): void {
+function vaultedTemple(b: CastleBuilder, depth: number, near: boolean): void {
   // Pale weathered limestone under dark slate: it stands out of the grey town.
   const stone = "#cfc9b9", roof = "#3c4247", trim = "#b9b3a3", gold = "#cdb06a", n = 7;
   b.add(new THREE.CylinderGeometry(mm(36), mm(38), mm(2) + depth, n).translate(0, -depth / 2, 0), 0, mm(1), 0, trim);
@@ -464,7 +464,7 @@ function starrySept(b: CastleBuilder, depth: number, near: boolean): void {
 // White Harbor's Wolf's Den (inferred; books: the town's old castle, later a
 // gaol): a dark square keep under slate inside a low curtain with round
 // corner towers and a gatehouse on the harbour side (local +Z).
-function wolfsDen(b: CastleBuilder, depth: number, near: boolean): void {
+function riverFort(b: CastleBuilder, depth: number, near: boolean): void {
   const stone = "#6f726e", dark = "#5f625e", roof = "#3b4442", half = mm(36), wallH = mm(9), thick = mm(3);
   b.add(new THREE.BoxGeometry(half * 2 + mm(6), mm(2) + depth, half * 2 + mm(6)).translate(0, -depth / 2, 0), 0, mm(1), 0, dark);
   [[0, -half, half * 2, thick], [-half, 0, thick, half * 2]].forEach(([x, z, w, d]) => {
@@ -482,10 +482,10 @@ function wolfsDen(b: CastleBuilder, depth: number, near: boolean): void {
   if (near) [-1, 1].forEach(side => b.add(new THREE.PlaneGeometry(mm(2), mm(4)), mm(-6) + side * mm(5), mm(20), mm(5.05), "#2e3237", 0, 3));
 }
 
-// Sunspear's Tower of the Sun (inferred; books): a sandstone drum under a
+// the desert seat's Tower of the Sun (inferred; books): a sandstone drum under a
 // gilded dome, with the slender Spear Tower beside it. Only drawn when the
 // castle has no physical complex of its own (P3·C2 carries it otherwise).
-function sunTower(b: CastleBuilder, depth: number, near: boolean): void {
+function domedTower(b: CastleBuilder, depth: number, near: boolean): void {
   const sand = "#d6b688", gold = "#c9a24a", n = near ? 20 : 10;
   b.add(new THREE.CylinderGeometry(mm(20), mm(21), mm(4) + depth, n).translate(0, -depth / 2, 0), 0, mm(2), 0, "#c9a67a");
   b.add(new THREE.CylinderGeometry(mm(14), mm(15), mm(30), n), 0, mm(19), 0, sand);
@@ -496,7 +496,7 @@ function sunTower(b: CastleBuilder, depth: number, near: boolean): void {
 
 // Seal Rock (inferred; books: an island in White Harbor's bay with an old
 // ruined fort): a low weathered rock with a broken round tower.
-function sealRock(b: CastleBuilder, depth: number, near: boolean): void {
+function harborRock(b: CastleBuilder, depth: number, near: boolean): void {
   const rock = new THREE.SphereGeometry(mm(40), near ? 12 : 7, near ? 7 : 4);
   const p = rock.getAttribute("position") as unknown as { count: number; getX(i: number): number; getY(i: number): number; getZ(i: number): number; setXYZ(i: number, x: number, y: number, z: number): void };
   for (let i = 0; i < p.count; i++) {

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { METRES_PER_UNIT } from "../core/SceneFrame";
 import CastleBuilder from "../castles/CastleBuilder";
-import { buildPyke } from "../castles/CastlePyke";
+import { buildIslandFortress } from "../castles/IslandFortress";
 import { castlePalettes } from "../castles/castleStyles";
 import { buildDragonstoneCarvings } from "./CrownSeatArt";
 import { ComplexPlan, HeroPlan, Prop, rockDrift, rockShrink, RoofKind, Seated } from "./ComplexPlan";
@@ -172,7 +172,7 @@ function tower(b: B, s: Extract<Seated, { type: "tower" }>, seed: number): void 
 }
 
 /**
- * Harrenhal: a tower «like melted wax»: slumped, dripping crowns of scorched
+ * the ruined fortress: a tower «like melted wax»: slumped, dripping crowns of scorched
  * grey stone, lighter courses showing through the soot, glassy where the
  * dragonfire vitrified it (darker, never black, catching the sky).
  */
@@ -426,7 +426,7 @@ function prop(b: B, p: Prop): void {
 
 /** Palette of a complex: the miniature's own palette when it has one. */
 export function complexBuilder(plan: ComplexPlan, detailed: boolean): CastleBuilder {
-  // Harrenhal: scorched grey stone, lighter courses through the soot (never black slabs).
+  // the ruined fortress: scorched grey stone, lighter courses through the soot (never black slabs).
   const palette = plan.recipe == "harrenhal" ? { stone: "#706d64", trim: "#827e72", roof: "#47484b" }
     : plan.recipe == "red-keep" ? { stone: "#ad6853", trim: "#c18b70", roof: "#753e34" }
     : plan.recipe == "casterly-summit" ? { stone: "#b9a477", trim: "#cdbb92", roof: "#8e4636" } : plan.palette;
@@ -441,7 +441,7 @@ export function complexBuilder(plan: ComplexPlan, detailed: boolean): CastleBuil
 export function* complexGeometry(plan: ComplexPlan, detailed: boolean): Generator<void, THREE.BufferGeometry, void> {
   const b = complexBuilder(plan, detailed);
   if (plan.recipe == "pyke-stacks") {
-    buildPyke(b);
+    buildIslandFortress(b);
     const geometry = b.finish(), uv = geometry.getAttribute("uv") as unknown as { count: number; getX(i: number): number; getY(i: number): number; setXY(i: number, x: number, y: number): void };
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 520 * U, uv.getY(i) * 260 * U);
     return geometry.scale(520 * U, 260 * U, 520 * U).translate(plan.offset[0] * U, plan.lift * U, plan.offset[1] * U);
@@ -550,7 +550,7 @@ function strataPoints(strata: Stratum[], detailed: boolean, seed: number, floor 
 }
 
 /**
- * A rock needle of the Eyrie: a stack of fractured, angular drums, each
+ * A rock needle of the highland palace: a stack of fractured, angular drums, each
  * offset and turned a little (columnar jointing), notched by deep cracks,
  * flared where it meets the mountain, leaning, with snow on the high ledges
  * and a level summit for the palace.
@@ -594,13 +594,13 @@ function spire(b: B, x: number, z: number, r: number, base: number, top: number,
   return rockGeometry(strataPoints(strata, b.detailed, seed * 101), paint, 1);
 }
 
-/** Ellipse radius of the Rock's footprint at local angle θ (local x seaward). */
+/** Ellipse radius of the headland's footprint at local angle θ (local x seaward). */
 function ellipse(rx: number, rz: number, theta: number): number {
   return 1 / Math.hypot(Math.cos(theta) / rx, Math.sin(theta) / rz);
 }
 
 /**
- * Casterly Rock: a colossal headland of golden-grey stone rising out of the
+ * the golden headland: a colossal headland of golden-grey stone rising out of the
  * sea. Stacked strata (each a sheer, fractured face over a ledge) taper
  * gently toward the land and stand almost vertical toward the sea; gullies
  * cleave the faces from top to bottom; the foot is wave-cut and wet. The
@@ -619,7 +619,7 @@ function* rock(b: B, hero: Extract<HeroPlan, { kind: "rock" }>, extras: THREE.Bu
   const ring = (t: number, layer: number): [number, number][] => Array.from({ length: sides }, (_, k) => {
     const theta = k / sides * Math.PI * 2;
     const land = Math.pow(Math.max(0, -Math.cos(theta)), 1.4);
-    // Each bed recesses unevenly round the Rock, more toward the land.
+    // Each bed recesses unevenly round the headland, more toward the land.
     const recess = (0.05 + 0.09 * land) * t * (0.5 + 0.5 * Math.sin(theta * 2 + layer * 1.3 + hero.seed));
     const cleft = gullies.reduce((sum, g) => { const d = Math.atan2(Math.sin(theta - g), Math.cos(theta - g)); return sum + Math.exp(-d * d / 0.006) * 0.16; }, 0);
     // Asymmetric lobes, buttresses that run through every bed (groups of three facets), bed-by-bed fracture.
@@ -667,8 +667,8 @@ function* rock(b: B, hero: Extract<HeroPlan, { kind: "rock" }>, extras: THREE.Bu
     return tone.clone();
   };
   extras.push(rockGeometry(strataPoints(strata, detailed, hero.seed), paint));
-  // The neck: low beds joining the Rock's landward foot to the shore, stopping
-  // short of the castle's own yard (the anchor, local origin), so the Rock reads
+  // The neck: low beds joining the headland's landward foot to the shore, stopping
+  // short of the castle's own yard (the anchor, local origin), so the headland reads
   // as a headland, not an island.
   const [lx, lz] = world(-hero.rx * 0.85, 0);
   const reach = Math.hypot(lx, lz) - 70;
@@ -782,7 +782,7 @@ function* rock(b: B, hero: Extract<HeroPlan, { kind: "rock" }>, extras: THREE.Bu
   }
 }
 
-/** The Hightower: a white stepped tower of ~240 m on its black-stone base, crowned by the beacon. */
+/** The the lighthouse: a white stepped tower of ~240 m on its black-stone base, crowned by the beacon. */
 function hightower(b: B, hero: Extract<HeroPlan, { kind: "hightower" }>): void {
   const white = "#d9d3c4", trim = "#ece6d6";
   const g = hero.ground;
@@ -814,12 +814,12 @@ function hightower(b: B, hero: Extract<HeroPlan, { kind: "hightower" }>): void {
   b.add(new THREE.ConeGeometry(8 * U, 6 * U, 16), hero.x * U, (y + 13) * U, hero.z * U, "#8e8a7e", 0, 1);
 }
 
-/** Top of the Hightower's beacon (local metres), where the fire burns. */
+/** Top of the the lighthouse's beacon (local metres), where the fire burns. */
 export function beaconPoint(hero: Extract<HeroPlan, { kind: "hightower" }>): [number, number, number] {
   return [hero.x, hero.ground + 26 + 60 + 50 + 44 + 34 + 14 + 4, hero.z];
 }
 
-/** Always-physical hero geometry (needles, the Rock, the Hightower), sliced. */
+/** Always-physical hero geometry (needles, the headland, the the lighthouse), sliced. */
 export function* heroGeometry(plan: ComplexPlan, detailed: boolean): Generator<void, THREE.BufferGeometry | undefined, void> {
   const hero = plan.hero;
   if (!hero) return undefined;

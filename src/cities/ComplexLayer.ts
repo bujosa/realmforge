@@ -8,8 +8,8 @@ import { CastlePalette, CastleStyle } from "../castles/castleStyles";
 import ComplexMaterial, { addFadeAttribute, FADE_ATTRIBUTE, HeroMaterial } from "./ComplexMaterial";
 import { beaconPoint, complexGeometry, heroGeometry } from "./ComplexGeometry";
 import { ComplexGround, ComplexPlan, planComplex, Volume } from "./ComplexPlan";
-import IronIslandDressing from "./IronIslandDressing";
-import { IronSeatPlan, planIronIslandSeats } from "./IronIslandSeats";
+import IslandDressing from "./IslandDressing";
+import { IronSeatPlan, planIslandSeats } from "./IslandSeats";
 
 /** One live castle seat the layer may replace with its physical complex. */
 export interface ComplexSource {
@@ -66,7 +66,7 @@ interface Entry {
   detailed?: Built;
   scenery?: Built;
   sceneryPlan?: IronSeatPlan;
-  dressing?: IronIslandDressing;
+  dressing?: IslandDressing;
   hero?: THREE.Mesh;
   /** Detailed hero form, shown within HERO_DETAIL metres; `hero` is the far form. */
   heroDetail?: THREE.Mesh;
@@ -83,10 +83,10 @@ const LIMITS: Record<ComplexTier, { physical: number; detail: number; detailed: 
   balanced: { physical: 3, detail: 380, detailed: 2, shadows: false, budgetMs: 4 }
 };
 
-/** Metres under which a hero (needles, Rock, Hightower) uses its detailed form. */
+/** Metres under which a hero (needles, Rock, the lighthouse) uses its detailed form. */
 const HERO_DETAIL = 4000;
 
-/** Kinds whose hero (needles, Rock, Hightower) is geography: always physical. */
+/** Kinds whose hero (needles, Rock, the lighthouse) is geography: always physical. */
 const HERO_KINDS = new Set(["the-eyrie", "casterly-rock", "oldtown"]);
 
 /**
@@ -95,12 +95,12 @@ const HERO_KINDS = new Set(["the-eyrie", "casterly-rock", "oldtown"]);
  * deterministic plan (ComplexPlan) on first approach, a sliced geometry build
  * (≤ budgetMs per frame), and a board ↔ physical switch with hysteresis and a
  * 250 ms dithered cross-fade (RepresentationLod). Heroes that are geography
- * (the Eyrie's needles, Casterly Rock, the Hightower) are always physical.
+ * (the highland palace's needles, the golden headland, the the lighthouse) are always physical.
  */
 export default class ComplexLayer {
   readonly group = new THREE.Group();
   readonly material: ComplexMaterial;
-  /** Heroes (the Rock, the needles, the Hightower): castle surfaces plus faceted rock. */
+  /** Heroes (the headland, the needles, the the lighthouse): castle surfaces plus faceted rock. */
   private heroMaterial: HeroMaterial;
   private entries = new Map<string, Entry>();
   private lod = new RepresentationLod();
@@ -193,7 +193,7 @@ export default class ComplexLayer {
         style: pending.entry.source.style, palette: pending.entry.source.palette, seaward: pending.entry.source.seaward }, this.ground(pending.entry.source, world)) ?? null;
       if (pending.entry.source.kind == "pyke" && world.frame.k == 20) {
         const anchor = world.frame.boardPoint(pending.entry.source.anchor.x, pending.entry.source.anchor.z);
-        pending.entry.sceneryPlan = planIronIslandSeats(anchor, this.ground(pending.entry.source, world));
+        pending.entry.sceneryPlan = planIslandSeats(anchor, this.ground(pending.entry.source, world));
       }
       animating = true;
     }
@@ -212,7 +212,7 @@ export default class ComplexLayer {
       else if (!entry.job && plan.hero && entry.hero && !entry.heroDetail && metres < HERO_DETAIL) entry.job = { lod: "hero-detailed", steps: heroGeometry(plan, true) };
       if (!entry.job && entry.sceneryPlan && !entry.scenery && metres < 2800) entry.job = { lod: "scenery", steps: complexGeometry(entry.sceneryPlan, true) };
       if (entry.sceneryPlan && metres < 2800 && !entry.dressing) {
-        entry.dressing = new IronIslandDressing(this.ground(entry.source, world), 3.1 - entry.source.anchor.y * METRES_PER_UNIT, entry.sceneryPlan, this.material);
+        entry.dressing = new IslandDressing(this.ground(entry.source, world), 3.1 - entry.source.anchor.y * METRES_PER_UNIT, entry.sceneryPlan, this.material);
         entry.dressing.group.position.copy(entry.source.anchor);
         this.group.add(entry.dressing.group);
       }
@@ -279,7 +279,7 @@ export default class ComplexLayer {
       if (detail) entry.heroDetail = mesh; else entry.hero = mesh;
       const hero = entry.plan?.hero;
       if (hero?.kind == "hightower" && !entry.fire) {
-        // The beacon burns on the Hightower: public, static, no light.
+        // The beacon burns on the the lighthouse: public, static, no light.
         const [x, y, z] = beaconPoint(hero);
         const m = 1 / METRES_PER_UNIT;
         const fire = new THREE.Mesh(this.fireGeometry, this.fireMaterial);

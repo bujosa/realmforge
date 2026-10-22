@@ -39,7 +39,7 @@ const frameIntervals: number[] = [];
 let buildMs = 0, frameMs = 0, lastTime = performance.now(), elapsed = 0, lastStats = 0, qaToken = 0;
 let qaMode = false, turntable = false, wireframe = false;
 const exploration = new Exploration(camera, orbit, renderer.domElement, mode => { settings.navigation = mode; applyStage(); writeURL(); });
-const orderedCategories = ["Explore", "Pieces", "Castles", "Cities & seats", "Nature", "Props", "Materials", "Heraldry", "Scale"];
+const orderedCategories = ["Explore", "Pieces", "Armies", "Wildlings", "Castles", "Cities & seats", "Nature", "Props", "Dragons", "Effects", "Tokens", "Materials", "Heraldry", "Scale"];
 const orderedStories = () => [...allStories()].sort((a,b) => {
   const ai = orderedCategories.indexOf(a.category), bi = orderedCategories.indexOf(b.category);
   return (ai < 0 ? 1 : ai) - (bi < 0 ? 1 : bi) || a.title.localeCompare(b.title);
@@ -226,7 +226,10 @@ async function showSheet(): Promise<void> {
         const deadline = performance.now() + 15000;
         while (!built.ready()) { if (performance.now() > deadline) throw new Error(`Asset readiness timeout: ${story.id}`); await nextFrame(); }
       }
-      frame(built.object, thumbCamera, 4 / 3); built.update?.(0, 1);
+      frame(built.object, thumbCamera, 4 / 3);
+      // Sample visible motion for the sheet instead of capturing a zero-age burst.
+      if (story.category === "Dragons") for (let i = 0; i < 60; i++) built.update?.(1 / 30, i / 30);
+      else built.update?.(story.category === "Effects" ? 0.35 : 0, 1);
       // Builders may initialize animated bounds or request their own legacy frame on first update.
       frame(built.object, thumbCamera, 4 / 3);
       renderer.setRenderTarget(target); renderer.render(scene, thumbCamera); renderer.setRenderTarget(null);

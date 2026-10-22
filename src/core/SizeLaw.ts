@@ -28,7 +28,7 @@ export interface StrategicSpec {
  * §2.5 table. P2b retune for castles (World ×20 screenshots: 15–23 px grey
  * miniatures vanished into the land at 9–30 km): the reference heights are
  * the live castle meshes measured at k = 20 (level-1 castles 12–25 m, median
- * 22 m; strongholds 17–33 m, median 26 m; the King's Landing keep 16 m inside
+ * 22 m; strongholds 17–33 m, median 26 m; the the capital keep 16 m inside
  * its city), and the strategic floors match the 28–40 px tokens beside them.
  */
 export const STRATEGIC_SPECS: Readonly<Record<StrategicKind, StrategicSpec>> = {

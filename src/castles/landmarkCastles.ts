@@ -2,8 +2,8 @@ import * as THREE from "three";
 import CastleBuilder from "./CastleBuilder";
 import { CastlePalette } from "./castleStyles";
 import { approach, curtainSegment, portal, squareTower, stoneRing, terrace } from "./CastleArchitecture";
-import { kingsLandingYard, winterfellYard } from "./CastleNeighborhood";
-import { winterfellGodswood } from "./CastleGodswood";
+import { capitalSeatYard, northernSeatYard } from "./CastleNeighborhood";
+import { northernSacredGrove } from "./SacredGrove";
 
 // Original, bounded procedural studies of the landmark exteriors. Production
 // references and remaining fidelity work: docs/design/v3-architecture-references.md.
@@ -28,7 +28,7 @@ function gable(b: CastleBuilder, w: number, h: number, d: number, x: number, y: 
   b.add(new THREE.ExtrudeGeometry(roof, { depth: d, bevelEnabled: false }), x, y, z - d / 2, b.palette.roof, 0, 2, 1);
 }
 
-function winterfell(b: CastleBuilder): number {
+function northernSeat(b: CastleBuilder): number {
   const p = b.palette;
   b.box(0.54, 0.11, 0.44, 0, -0.035, 0);
   b.curtain(0.44, 0.34, 0.02, false, 0.12);
@@ -51,13 +51,13 @@ function winterfell(b: CastleBuilder): number {
     });
     for (let i = 0; i < 5; i++) b.box(0.004, 0.055, 0.057, 0.078 + i * 0.021, 0.058, -0.085, p.trim);
   }
-  winterfellGodswood(b);
+  northernSacredGrove(b);
   // Inner-ward smithy, stable, granary and well sit on the free ground beside the keep.
-  winterfellYard(b);
+  northernSeatYard(b);
   return 0.207;
 }
 
-function redKeep(b: CastleBuilder, sept = true): number {
+function capitalKeep(b: CastleBuilder, sept = true): number {
   const p = b.palette;
   b.box(0.58, 0.11, 0.47, 0, -0.035, 0);
   b.curtain(0.48, 0.37, 0.02, false, 0.10);
@@ -104,11 +104,11 @@ function redKeep(b: CastleBuilder, sept = true): number {
     }
   }
   // Lower-city stalls and the palace-side yard sit inside the existing skirt.
-  kingsLandingYard(b);
+  capitalSeatYard(b);
   return 0.22;
 }
 
-function dragonstone(b: CastleBuilder): number {
+function volcanicSeat(b: CastleBuilder): number {
   const p = b.palette;
   b.cliff(0.15, 0.235, 0, 0, "#465257");
   b.box(0.32, 0.045, 0.22, 0, 0.1125, -0.025, p.stone);
@@ -140,7 +140,7 @@ function dragonstone(b: CastleBuilder): number {
   return 0.202;
 }
 
-function highgarden(b: CastleBuilder): number {
+function gardenSeat(b: CastleBuilder): number {
   const p = b.palette;
   // Almodóvar / landmark S7: an irregular hill fortress, square towers of different
   // heights and open courts. No book-derived three concentric garden rings.
@@ -183,7 +183,7 @@ function highgarden(b: CastleBuilder): number {
   return 0.244;
 }
 
-function stormsEnd(b: CastleBuilder): number {
+function coastalDrum(b: CastleBuilder): number {
   const p = b.palette;
   // Belshaw's late exterior study: one dominant ribbed drum, a narrow windowed
   // crown and low dome above a walled approach. Earlier multi-tower concepts
@@ -234,10 +234,10 @@ function stormsEnd(b: CastleBuilder): number {
 
 export function buildLandmarkCastle(variant: string, b: CastleBuilder): number | undefined {
   const kind = baseKind(variant);
-  if (kind == "winterfell") return winterfell(b);
-  if (kind == "kings-landing") return redKeep(b, kind == variant);
-  if (kind == "dragonstone") return dragonstone(b);
-  if (kind == "highgarden") return highgarden(b);
-  if (kind == "storms-end") return stormsEnd(b);
+  if (kind == "winterfell") return northernSeat(b);
+  if (kind == "kings-landing") return capitalKeep(b, kind == variant);
+  if (kind == "dragonstone") return volcanicSeat(b);
+  if (kind == "highgarden") return gardenSeat(b);
+  if (kind == "storms-end") return coastalDrum(b);
   return undefined;
 }

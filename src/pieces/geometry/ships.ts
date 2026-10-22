@@ -179,7 +179,7 @@ export function shipGeometry(house: string, color: string): THREE.BufferGeometry
   });
 
   const sailAngle = -0.38;
-  // Keep the same eight columns; a narrower painted edge gives Greyjoy more
+  // Keep the same eight columns; a narrower painted edge gives The maritime palette more
   // dark canvas without enlarging the unit or adding tessellation.
   const sailU = (column: number): number => column == 0 ? 0 : column == 8 ? 1
     : profile.edgeWidth + (column - 1) * (1 - 2 * profile.edgeWidth) / 6;

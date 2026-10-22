@@ -1,10 +1,9 @@
-import { registerStories } from "../registry";
-import { physicalRecipes } from "../../src/presets/physicalCities";
-import { cityLayouts } from "../../src/presets/cityLayouts";
-import { buildCity } from "../../src/cities/settlements/City";
-import type { CityId } from "../../src/cities/settlements/types";
-import { cityStudy } from "../cityStudy";
-
+import { registerStories } from "../../registry";
+import { physicalRecipes } from "../../../src/presets/physicalCities";
+import { cityLayouts } from "../../../src/presets/cityLayouts";
+import { buildCity } from "../../../src/cities/settlements/City";
+import type { CityId } from "../../../src/cities/settlements/types";
+import { cityStudy } from "../../cityStudy";
 for (const recipe of physicalRecipes) registerStories({
   id: `cities/full-${recipe.id}`, title: `${recipe.name} · complete city`, category: "Cities & seats",
   description: "Full production city recipe on a synthetic flat region, with a straight QA shoreline. Houses retain their physical metre dimensions. This is an isolated recipe study; actual game coastlines produce different layouts.",

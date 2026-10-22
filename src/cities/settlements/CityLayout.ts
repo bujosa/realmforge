@@ -8,7 +8,7 @@ import { gateSpan, HouseKit, houseKits, kitBits, roofPitch, towerSize, wallHeigh
 // world height. `depth` is the skirt depth in instance-local units.
 //
 // Two modes. Authored: the normalized plan in layouts.ts is placed by the
-// frame (Winterfell, and King's Landing in standalone previews). Region fit
+// frame (the northern seat, and the capital in standalone previews). Region fit
 // (`spec.regionFit` with a real region polygon): the curtain follows the land
 // borders inside the region, quays face open water, districts are bands by
 // distance from the keep, and landmarks take the best clear ground. Either way

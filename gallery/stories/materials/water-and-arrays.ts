@@ -1,11 +1,10 @@
-import { waterEnvironment } from "../../src/materials/WaterEnvironment";
-import SurfaceFinish from "../../src/materials/SurfaceFinish";
+import { waterEnvironment } from "../../../src/materials/WaterEnvironment";
+import SurfaceFinish from "../../../src/materials/SurfaceFinish";
 import * as THREE from "three";
-import { oceanRings } from "../../src/materials/OceanGeometry";
-import { SurfaceArrays, surfaceArrayMaterial, terrainLayers, masonryLayers } from "../../src/materials/SurfaceArrays";
-import { dockGeometry, boatGeometry } from "../../src/props/HarborProps";
-import { registerStories } from "../registry";
-import { waterStudy } from "../waterStudy";
+import { oceanRings } from "../../../src/materials/OceanGeometry";
+import { SurfaceArrays, surfaceArrayMaterial, terrainLayers, masonryLayers } from "../../../src/materials/SurfaceArrays";
+import { registerStories } from "../../registry";
+import { waterStudy } from "../../waterStudy";
 for (const kind of ["terrain","masonry"] as const) for (const [layer,title] of (kind === "terrain" ? terrainLayers : masonryLayers).entries()) registerStories({
   id:`materials/${kind}-${layer}`,title:`CC0 ${title}`,category:"Materials",description:"Original production Poly Haven CC0 texture array, with bundled Basis transcoder. Standalone single-layer swatch; source splat shader is also included.",
   build({renderer}) {
@@ -16,7 +15,6 @@ for (const kind of ["terrain","masonry"] as const) for (const [layer,title] of (
   },
 });
 registerStories({ id:"materials/animated-water",title:"Water · production waves & Fresnel",category:"Materials",build(){ const water=waterStudy(3,3); return {object:water.mesh,update:(_dt,time)=>water.update(time),dispose:water.dispose}; } });
-for (const kind of ["pier-timber","quay-stone","skiff"] as const) registerStories({ id:`props/${kind}`,title:kind === "skiff" ? "Coastal fishing skiff" : kind === "pier-timber" ? "Timber pier" : "Stone quay",category:"Props",build:()=>({object:new THREE.Mesh(kind === "skiff" ? boatGeometry() : dockGeometry(kind),new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.85,side:THREE.DoubleSide}))}) });
 registerStories({id:"materials/ocean-rings",title:"Ocean · adaptive concentric mesh",category:"Materials",description:"Original continuous ocean-ring topology, with the wireframe visible for inspection. Hosts centre and scale the surface around the camera.",
   build(){const rings=oceanRings({spacing:0.04,cells:16,levels:5});return {object:new THREE.Mesh(rings.geometry,new THREE.MeshStandardMaterial({color:"#7eb2b8",wireframe:true,side:THREE.DoubleSide}))};}
 });

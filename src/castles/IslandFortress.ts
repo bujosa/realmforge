@@ -5,7 +5,7 @@ import { squareTower } from "./CastleArchitecture";
 
 // Original, compact study of the televised sea-stack fortress. The existing
 // footprint, banner apex and strategic plaque remain the placement authority.
-export const pykePalette: Partial<CastlePalette> = {
+export const islandFortressPalette: Partial<CastlePalette> = {
   stone: "#626d70", trim: "#858c86", roof: "#39464b", wood: "#655541", round: true
 };
 
@@ -140,7 +140,7 @@ function hallRoof(b: CastleBuilder): void {
   b.add(new THREE.ExtrudeGeometry(shape, { depth: 0.078, bevelEnabled: false }).rotateY(Math.PI / 2), -0.240, 0.232, 0.012, b.palette.roof, 0, 1);
 }
 
-export function buildPyke(b: CastleBuilder): number {
+export function buildIslandFortress(b: CastleBuilder): number {
   const p = b.palette;
   seaStack(b, -0.015, 0, 0.195, 0.102, 0.080, 0.3);
   seaStack(b, 0.195, -0.032, 0.258, 0.053, 0.049, 1.7, 0.004);

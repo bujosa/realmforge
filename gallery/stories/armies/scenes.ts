@@ -5,7 +5,7 @@ import { registerStories } from "../../registry";
 import { houses, names, lab, swatch, label, select, toggle } from "./support";
 
 registerStories({
-  id: "armies/state-player", title: "State player", category: "Armies / motion lab",
+  id: "armies/state-player", title: "State player", category: "Armies",
   build(ctx) {
     const view = lab(ctx, "The living company", "Inspect the silhouette, choose a pose, then play. Movement is explicitly driven by the host; pause freezes the whole company and reduced motion keeps a static pose.");
     let type: ArmyType = "knight", house = "greyjoy", state: ArmyState = "idle", table = false, speed = 1;
@@ -39,7 +39,7 @@ registerStories({
     return view;
   },
 }, {
-  id: "armies/battle", title: "Battle · 10 second loop", category: "Armies / motion lab",
+  id: "armies/battle", title: "Battle · 10 second loop", category: "Armies",
   build(ctx) {
     const view = lab(ctx, "The clash at the ford", "A ten-second encounter: advance, charge, shield wall, clash, retreat, victory. The galley rows past the battlefield; standards carry the story at every distance.");
     swatch(view.object, 0, -0.2, "#687a52", 7.6, 6.5);
@@ -80,7 +80,7 @@ registerStories({
 });
 
 for (const detail of ["high", "balanced"] as const) registerStories({
-  id: `armies/board-${detail}`, title: `120 companies · ${detail}`, category: "Armies / budgets",
+  id: `armies/board-${detail}`, title: `120 companies · ${detail}`, category: "Armies",
   build(ctx) {
     const view = lab(ctx, "The campaign board", "120 mixed companies, shared materials and two LOD pools per type. The HUD counts army geometry separately from the gallery floor and labels. All companies are explicitly idling.", detail);
     swatch(view.object, 0, 0, "#687a52", 20, 17);
@@ -96,7 +96,7 @@ for (const detail of ["high", "balanced"] as const) registerStories({
 });
 
 registerStories({
-  id: "armies/before-after", title: "Before / after · same scale", category: "Armies / comparison",
+  id: "armies/before-after", title: "Before / after · same scale", category: "Armies",
   build(ctx) {
     const view = lab(ctx, "From marker to company", "Current World sculpts on the left. New companies on the right. Both use the same numeric world scale: the new formation spends its silhouette on soldiers and heraldry rather than a round plinth.");
     const compact = matchMedia("(max-width:600px)").matches;
