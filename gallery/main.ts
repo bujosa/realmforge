@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { allStories, type StoryInstance } from "./registry";
-import "./stories/pieces";
+// Every file under stories/ registers its own entries; no central list to edit.
+import.meta.glob("./stories/**/*.ts", { eager: true });
 
 const stage = document.getElementById("stage")!;
 const nav = document.getElementById("nav")!;
