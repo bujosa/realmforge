@@ -10,13 +10,19 @@ export function landscapeGeometry(high:boolean):THREE.BufferGeometry {
 }
 export function terrainMaterial(d:Direction, surfaces:SurfaceArraySet):THREE.MeshStandardMaterial {
   const m=new THREE.MeshStandardMaterial({roughness:0.94});
+  const b=d.grounding;
+  const linear=(rgb:readonly [number,number,number]):THREE.Color=>new THREE.Color(...rgb);
   m.onBeforeCompile=s=>{
     Object.assign(s.uniforms,{
       ...(d.grounding ? {
-        ldMoor:{value:new THREE.Color(d.grounding.moor)},ldFrost:{value:new THREE.Color(d.grounding.frost)},
-        ldPasture:{value:new THREE.Color(d.grounding.pasture)},ldCereal:{value:new THREE.Color(d.grounding.cereal)},
-        ldVines:{value:new THREE.Color(d.grounding.vines)},ldValley:{value:new THREE.Color(d.grounding.valley)},
-        ldWoodland:{value:new THREE.Color(d.grounding.woodland)},ldParcelSize:{value:new THREE.Vector2(...d.grounding.parcelSize)},
+        ldMoor:{value:linear(d.grounding.moor)},ldClearing:{value:linear(d.grounding.clearing)},
+        ldFrost:{value:new THREE.Color(d.grounding.frost)},ldPasture:{value:linear(d.grounding.pasture)},
+        ldCereal:{value:linear(d.grounding.cereal)},ldOlives:{value:linear(d.grounding.olives)},
+        ldVines:{value:linear(d.grounding.vines)},ldHedge:{value:linear(d.grounding.hedge)},ldLane:{value:linear(d.grounding.lane)},
+        ldSteppeLow:{value:linear(d.grounding.steppe[0])},ldSteppeHigh:{value:linear(d.grounding.steppe[1])},
+        ldGrassland:{value:new THREE.Color(d.grounding.grassland)},ldBasin:{value:new THREE.Color(d.grounding.basin)},
+        ldValley:{value:new THREE.Color(d.grounding.valley)},ldWoodland:{value:new THREE.Color(d.grounding.woodland)},
+        ldParcelSize:{value:new THREE.Vector2(...d.grounding.parcelMetres).divideScalar(d.grounding.metresPerUnit)},
         ldLandUse:{value:new THREE.Vector4(d.grounding.parcelBlend,d.grounding.frostStrength,d.grounding.moorStrength,d.grounding.valleyStrength)},
       } : {}),
       ldAlbedo:{value:surfaces.albedo},ldNormal:{value:surfaces.normal},ldRough:{value:surfaces.roughness},
@@ -27,7 +33,7 @@ export function terrainMaterial(d:Direction, surfaces:SurfaceArraySet):THREE.Mes
     s.vertexShader=s.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nldP=position;ldN=normal;");
     s.fragmentShader=`varying vec3 ldP;varying vec3 ldN;uniform highp sampler2DArray ldAlbedo;uniform highp sampler2DArray ldNormal;uniform highp sampler2DArray ldRough;
     uniform vec3 ldGrass,ldNorth,ldDry,ldRock,ldSand,ldSnow;uniform float ldPhoto,ldMood;
-    ${d.grounding ? "uniform vec3 ldMoor,ldFrost,ldPasture,ldCereal,ldVines,ldValley,ldWoodland;uniform vec2 ldParcelSize;uniform vec4 ldLandUse;" : ""}
+    ${d.grounding ? "uniform vec3 ldMoor,ldClearing,ldFrost,ldPasture,ldCereal,ldOlives,ldVines,ldHedge,ldLane,ldSteppeLow,ldSteppeHigh,ldGrassland,ldBasin,ldValley,ldWoodland;uniform vec2 ldParcelSize;uniform vec4 ldLandUse;" : ""}
     ${geographyGLSL}\n`+s.fragmentShader;
     s.fragmentShader=s.fragmentShader.replace("#include <color_fragment>",`#include <color_fragment>
       vec2 p=ldP.xz;float slope=1.0-ldN.y;float n=ldNoise(p*.22),fine=ldNoise(p*2.8);
@@ -46,27 +52,49 @@ export function terrainMaterial(d:Direction, surfaces:SurfaceArraySet):THREE.Mes
       float vineyard=step(44.0,p.x)*step(p.x,59.0)*step(14.0,p.y)*step(p.y,23.0);
       grass=mix(grass,ldDry*.8,vineyard*.35);grass*=1.0-vineyard*(.5+.5*sin(p.x*14.0))*.15;
       ${d.grounding ? `
-      // Climate is public landscape data; east is equally fertile around the valley.
-      float valley=east*exp(-pow((p.x-(49.0+3.0*sin(p.y*.11)))/9.0,2.0));
-      float fertile=(1.0-north)*(1.0-smoothstep(.10,.32,slope))*(1.0-smoothstep(3.5,6.0,ldP.y));
-      grass=mix(grass,ldValley,valley*ldLandUse.w);
-      float moor=north*(1.0-rock)*(1.0-snow)*smoothstep(.37,.68,ldNoise(p*.19));
-      grass=mix(grass,ldMoor,moor*ldLandUse.z);
-      float frost=north*smoothstep(2.8,6.5,ldP.y)*(1.0-rock)*(1.0-smoothstep(.32,.64,n));
-      grass=mix(grass,ldFrost,frost*ldLandUse.y);
-      vec2 farmSpace=(p+vec2(n,ldNoise(p*.12+9.0))*.65)/ldParcelSize;
-      vec2 parcel=floor(farmSpace),edge=min(fract(farmSpace),1.0-fract(farmSpace));
-      float seed=ldHash(parcel),farmEdge=smoothstep(.015,max(.04,fwidth(farmSpace.x)*1.2),min(edge.x,edge.y));
-      float farm=fertile*farmEdge*smoothstep(1.0,2.0,ldP.y)*(1.0-rock)*(1.0-snow);
-      farm*=mix(.45,1.0,smoothstep(.22,.50,ldNoise(p*.10)));
-      float vines=step(.78,seed)*max(east,1.0-smoothstep(4.0,14.0,p.y));
-      vec3 crop=seed<.5?ldCereal:ldPasture;crop=mix(crop,ldVines,vines);
-      float vineRows=sin(p.x*14.0+p.y*.8);
-      crop*=1.0-vines*(.5+.5*vineRows)*.16*(1.0-smoothstep(.5,1.5,fwidth(p.x*14.0)));
-      field=max(field,farm);fieldColour=mix(fieldColour,crop,farm*ldLandUse.x);
+      // Physical R4 settings; climate kernels describe only this synthetic study.
+      float altitude=ldP.y*${b?.metresPerUnit.toFixed(1)};
+      vec2 desertP=(p-vec2(${b?.westernDesert.centre.join(',')}))/vec2(${b?.westernDesert.radius.join(',')});
+      float desert=(1.0-east)*(1.0-smoothstep(.45,1.0,dot(desertP,desertP)));
+      sand=max(sand,desert*(1.0-rock));
+      snow=smoothstep(mix(${b?.snowSouthMetres[0].toFixed(1)},${b?.snowNorthMetres[0].toFixed(1)},north),mix(${b?.snowSouthMetres[1].toFixed(1)},${b?.snowNorthMetres[1].toFixed(1)},north),altitude)*(1.0-smoothstep(.25,.65,slope));
+      vec2 valleyP=(p-vec2(${b?.riverBasin.centre.join(',')}))/vec2(${b?.riverBasin.radius.join(',')});
+      float valley=east*pow(max(0.0,1.0-dot(valleyP,valleyP)),2.0);
+      vec2 basinP=(p-vec2(${b?.cityBasin.centre.join(',')}))/vec2(${b?.cityBasin.radius.join(',')});
+      float basin=east*pow(max(0.0,1.0-dot(basinP,basinP)),2.0);
+      vec2 forestP=(p-vec2(${b?.easternForest.centre.join(',')}))/vec2(${b?.easternForest.radius.join(',')});
+      float forest=east*(1.0-smoothstep(.55,1.0,dot(forestP,forestP)));
+      grass=mix(ldGrass,ldNorth,north*.86);
+      grass=mix(grass,ldDry,(1.0-east)*smoothstep(14.0,24.0,p.y)*.65);
+      grass=mix(grass,ldGrassland,east);
+      vec3 steppe=mix(ldSteppeLow,ldSteppeHigh,smoothstep(.25,.75,ldNoise(p*vec2(.17,.63))));
+      grass=mix(grass,steppe,east*(1.0-valley)*.86);
+      grass=mix(grass,ldBasin,basin);grass=mix(grass,ldValley,valley*ldLandUse.w);
       float woodland=smoothstep(.48,.73,ldNoise(p*.14))*(1.0-rock)*(1.0-snow);
       woodland*=mix(.12,1.0,smoothstep(.30,.67,ldNoise(p*.35)));
-      grass=mix(grass,ldWoodland*mix(.85,1.25,ldNoise(p*2.2)),woodland*mix(.38,.17,north));
+      woodland=mix(woodland,1.0,forest);
+      float moor=north*(1.0-smoothstep(.08,.24,slope))*(1.0-snow);
+      grass=mix(grass,ldMoor*(.82+.30*n),moor*smoothstep(.30,.63,ldNoise(p*.22))*ldLandUse.z);
+      float frost=north*smoothstep(${b?.frostMetres[0].toFixed(1)},${b?.frostMetres[1].toFixed(1)},altitude)*(1.0-rock)*smoothstep(.40,.64,ldNoise(p*.19));
+      grass=mix(grass,ldFrost,frost*mix(ldLandUse.y,1.0,${b?.winter.toFixed(1)}));
+      grass=mix(grass,ldWoodland*mix(.60,1.0,ldNoise(p*2.2)),woodland*mix(.73,.34,north));
+      grass=mix(grass,ldClearing*(.85+.25*n),moor*(1.0-woodland)*smoothstep(.34,.59,ldNoise(p*.55))*${b?.clearingStrength.toFixed(2)});
+      vec2 farmSpace=(p+vec2(n,ldNoise(p*.12+9.0))*${b?.parcelWarp.toFixed(2)})/ldParcelSize;
+      vec2 parcel=floor(farmSpace),edge=min(fract(farmSpace),1.0-fract(farmSpace));
+      float seed=ldHash(parcel),parcelPixel=max(fwidth(farmSpace.x),fwidth(farmSpace.y));
+      float farmEdge=smoothstep(${b?.parcelEdge[0]},max(${b?.parcelEdge[1]},parcelPixel*${b?.parcelEdge[2]}),min(edge.x,edge.y));
+      float fertile=(1.0-north)*(1.0-smoothstep(.10,.32,slope))*(1.0-smoothstep(${b?.farmMetres[0].toFixed(1)},${b?.farmMetres[1].toFixed(1)},altitude));
+      float farm=fertile*(1.0-sand)*(1.0-woodland*.8)*(1.0-rock)*(1.0-snow)*smoothstep(0.0,.24,ldShore(p))*smoothstep(.4,1.2,ldP.y);
+      farm*=mix(.82,1.0,smoothstep(.22,.50,ldNoise(p*.10)));
+      float vineClimate=max(basin,(1.0-east)*(1.0-smoothstep(4.0,14.0,p.y)));
+      float vines=step(.76,seed)*vineClimate;
+      vec3 crop=seed<mix(${b?.cerealFraction[0]},${b?.cerealFraction[1]},vineClimate)?ldCereal:seed<.78?ldPasture:ldOlives;
+      crop=mix(crop,ldVines,vines*.8);
+      float vinePhase=p.x*${b ? (b.metresPerUnit/b.vineRowMetres).toFixed(3) : "25.0"}+p.y*.8;
+      crop*=1.0-vines*(.5+.5*sin(vinePhase))*.16*(1.0-smoothstep(.5,1.5,fwidth(vinePhase)));
+      // Borders belong to the same warped parcels, with occasional earth lanes.
+      crop=mix(mix(ldHedge,ldLane,step(.88,seed)),crop,farmEdge);
+      field=farm*ldLandUse.x*(1.0-${b?.winter.toFixed(1)}*${b?.winterFarmLoss});fieldColour=crop*(.90+n*.22);rows=0.0;
       ` : ""}
       float layer=rock>.45?5.0:sand>.45?4.0:field>.45?2.0:n>.55?1.0:0.0;
       vec3 planes=pow(abs(ldN),vec3(6.0));planes/=max(dot(planes,vec3(1)),.001);
@@ -75,7 +103,7 @@ export function terrainMaterial(d:Direction, surfaces:SurfaceArraySet):THREE.Mes
       tex=mix(tex,texture(ldAlbedo,vec3(p*.75,5.0)).rgb,rock);
       if(rock>.99)tex=texture(ldAlbedo,vec3(ldP.yz*.65,5.0)).rgb*planes.x+texture(ldAlbedo,vec3(ldP.xy*.65,5.0)).rgb*planes.z+tex*planes.y;
       float luminance=dot(tex,vec3(.2126,.7152,.0722));
-      vec3 base=mix(grass,fieldColour+rows,field*.78);base=mix(base,ldRock,rock);base=mix(base,ldSand*mix(.70,1.0,smoothstep(.0,.65,ldP.y)),sand);base=mix(base,ldSnow,snow);
+      vec3 base=mix(grass,fieldColour+rows,field*${d.grounding ? "1.0" : ".78"});base=mix(base,ldRock,rock);base=mix(base,ldSand*mix(.70,1.0,smoothstep(.0,.65,ldP.y)),sand);base=mix(base,ldSnow,snow);
       base*=.85+n*.27+(fine-.5)*.10;
       base*=1.0-ldMood*smoothstep(.4,.72,ldNoise(p*.055))*.16;
       base*=mix(1.0,clamp(.68+luminance*1.5,.67,1.35),ldPhoto*(1.0-snow));
@@ -93,7 +121,7 @@ export function terrainMaterial(d:Direction, surfaces:SurfaceArraySet):THREE.Mes
       normal=normalize(normal+vec3(detail.x,detail.y,0.0)*ldPhoto*.17*(1.0-snow));
     `);
   };
-  m.customProgramCacheKey=()=>d.grounding?"lookdev-terrain-B-r3":"lookdev-terrain-v1";return m;
+  m.customProgramCacheKey=()=>d.grounding?"lookdev-terrain-B-r4":"lookdev-terrain-v1";return m;
 }
 export function seaMaterial(d:Direction):{material:THREE.MeshStandardMaterial;time:{value:number}} {
   const time={value:0};const m=new THREE.MeshStandardMaterial({color:d.sea,roughness:d.grounding ? .42 : .28,metalness:d.grounding ? .04 : .12});

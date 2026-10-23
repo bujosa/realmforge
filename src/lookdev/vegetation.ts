@@ -4,7 +4,7 @@ import { paintGeometry } from "../core/sculpt";
 import { floraCanopyTextures, floraGroupGeometry } from "../nature/FloraGeometry";
 import { type Direction, heightAt, hash, noise, riverX } from "./directions";
 
-type Tree = {x:number;z:number;h:number;pine:boolean;scale:number};
+type Tree = {x:number;z:number;h:number;pine:boolean;scale:number;planted?:boolean};
 function treeGeometry(pine:boolean,detail:boolean,cards=false):THREE.BufferGeometry {
   const pieces:THREE.BufferGeometry[]=[];
   const add=(g:THREE.BufferGeometry,c:string):void=>{const p=g.index?g.toNonIndexed():g;if(p!==g)g.dispose();p.setAttribute("ldLeaf",new THREE.Float32BufferAttribute(new Float32Array(p.getAttribute("position").count).fill(c==="#625441"?0:1),1));pieces.push(paintGeometry(p,c));};
@@ -39,6 +39,36 @@ export function vegetation(d:Direction,high:boolean):{object:THREE.Group;update:
     if(noise(x*.38,z*.38)<.24)continue;
     trees.push({x,z,h,pine:z< -8&&x<26,scale:.6+hash(i,9)*.65});
   }
+  if(d.grounding){
+    const b=d.grounding,unit=b.metresPerUnit;
+    // Reassign accepted broadleaf candidates, rather than expanding the tree pool.
+    // The synthetic settlement footprints match the existing placement exclusions.
+    const sites=[[-12,7,5],[-8,16,6.4],[47,5,6.4]];
+    const broadleaf=trees.filter(t=>!t.pine);let cursor=0;
+    for(const [cx,cz,radius] of sites){
+      let accepted=0;
+      for(const offset of b.orchardMetres.rows){
+        const r=radius+offset/unit,steps=Math.min(b.orchardMetres.candidates/b.orchardMetres.rows.length,Math.floor(2*Math.PI*r/(b.orchardMetres.spacing/unit)));
+        for(let i=0;i<steps&&accepted<b.orchardMetres.candidates;i++){
+          const a=i/steps*Math.PI*2,x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;
+          // Open orchard blocks and cross-axis gate/road approaches.
+          if(Math.floor(i/8)%3===0||Math.abs(x-cx)<b.orchardMetres.gate/unit/2||Math.abs(z-cz)<b.orchardMetres.gate/unit/2)continue;
+          const h=heightAt(x,z),delta=.12;
+          const slope=Math.hypot(heightAt(x+delta,z)-heightAt(x-delta,z),heightAt(x,z+delta)-heightAt(x,z-delta))/(2*delta);
+          if(h<.9||h>6.7||slope>.32||Math.abs(x-riverX(z))<1.35)continue;
+          if(sites.some(([sx,sz,sr])=>Math.hypot(x-sx,z-sz)<sr))continue;
+          const tree=broadleaf[cursor++];if(!tree)break;
+          Object.assign(tree,{x,z,h,scale:b.orchardMetres.height/unit*(.88+hash(i,cx)*.24),planted:true});accepted++;
+        }
+      }
+    }
+  }
+  const forestTint=(t:Tree):THREE.Color|undefined=>{
+    if(!d.grounding||t.planted)return;
+    const b=d.grounding,f=b.easternForest;
+    if(((t.x-f.centre[0])/f.radius[0])**2+((t.z-f.centre[1])/f.radius[1])**2>=1)return;
+    return new THREE.Color(b.forestCrown).lerp(new THREE.Color("#a5bf7a"),b.forestCrownLight);
+  };
   const disposers:(()=>void)[]=[];
   const leafCanvas=document.createElement("canvas");leafCanvas.width=leafCanvas.height=128;
   const c=leafCanvas.getContext("2d")!;
@@ -85,7 +115,7 @@ export function vegetation(d:Direction,high:boolean):{object:THREE.Group;update:
     if(canopy){let count=0;for(const t of canopy.trees){
       if(Math.hypot(t.x-camera.position.x,t.h-camera.position.y,t.z-camera.position.z)<=60)continue;
       transform.position.set(t.x,t.h+t.scale*.52,t.z);transform.rotation.set(0,hash(t.x,t.z)*6.28,0);transform.scale.set(t.scale*.43*(d.grounding?.crownWidth??1),t.scale*.3,t.scale*.43*(d.grounding?.crownWidth??1));transform.updateMatrix();canopy.mesh.setMatrixAt(count,transform.matrix);
-      if(d.grounding){const shade=THREE.MathUtils.lerp(...d.grounding.crownShade,noise(t.x*.8,t.z*.8));canopy.mesh.setColorAt(count,new THREE.Color(shade,shade,shade*.95));}
+      if(d.grounding){const shade=THREE.MathUtils.lerp(...d.grounding.crownShade,noise(t.x*.8,t.z*.8));canopy.mesh.setColorAt(count,(forestTint(t)??new THREE.Color(1,1,.95)).multiplyScalar(shade));}
       count++;
     }canopy.mesh.count=count;canopy.mesh.instanceMatrix.needsUpdate=true;if(canopy.mesh.instanceColor)canopy.mesh.instanceColor.needsUpdate=true;}
     for(const {mesh,data,detail} of batches){
@@ -93,8 +123,8 @@ export function vegetation(d:Direction,high:boolean):{object:THREE.Group;update:
         const distance=Math.hypot(t.x-camera.position.x,t.h-camera.position.y,t.z-camera.position.z);
         const near=high&&distance<18;if(near!==detail||(!t.pine&&distance>60))return;
         transform.position.set(t.x,t.h-.03,t.z);transform.rotation.set(0,hash(i,8)*Math.PI*2,0);
-        transform.scale.set(t.scale*(d.grounding?.crownWidth??1),t.scale*(t.x>26?.72:1),t.scale*(d.grounding?.crownWidth??1));transform.updateMatrix();mesh.setMatrixAt(packed,transform.matrix);
-        const tint=d.grounding?THREE.MathUtils.lerp(...d.grounding.crownShade,noise(t.x*.8,t.z*.8)):.80+hash(i,11)*.32;mesh.setColorAt(packed++,new THREE.Color(tint,tint,tint*.95));
+        transform.scale.set(t.scale*(d.grounding?.crownWidth??1),t.scale*(t.x>26&&!t.planted?.72:1),t.scale*(d.grounding?.crownWidth??1));transform.updateMatrix();mesh.setMatrixAt(packed,transform.matrix);
+        const tint=d.grounding?THREE.MathUtils.lerp(...d.grounding.crownShade,noise(t.x*.8,t.z*.8)):.80+hash(i,11)*.32;mesh.setColorAt(packed++,d.grounding?(forestTint(t)??new THREE.Color(1,1,.95)).multiplyScalar(tint):new THREE.Color(tint,tint,tint*.95));
       });mesh.count=packed;mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor!.needsUpdate=true;
     }
   };

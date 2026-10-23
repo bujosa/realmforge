@@ -8,9 +8,8 @@ flight (drag, WASD, Q/E); wheel reduces travel speed for close inspection.
 
 ## Direction and recommendation
 
-**B · Grounded realism is the chosen direction.** Its material, canopy and coast
-strategy has been ported to the game's World ×20 view and refined over three
-regional review rounds. The library now mirrors those refinements in B only;
+**B · Grounded realism shipped as the game default** in its fourth regional
+review round. Its material, canopy and coast strategy is mirrored here in B only;
 A and C remain available with their original output.
 
 ![Chosen B: regional terrain and forest](images/lookdev-b-regional.jpg)
@@ -29,6 +28,7 @@ new external assets are used.
 | 1 · Material and light port | Natural PBR ground/value range, regional vegetation, near cutout leaves, saline depth/shallows/foam and restrained atmosphere. |
 | 2 · Fertile regions | Green pasture/cereal/vineyard patchwork, grouped broadleaf canopies, fertile eastern grassland/river valley and olive-like low broadleaf silhouettes; less sea glare. |
 | 3 · Regional separation | Yellow-green northern moor between rock and light frost, stronger agricultural parcel contrast, sunlit crowns and shaded gaps, lower haze. |
+| 4 · Shipped default | Eastern steppe stays grassland; fertile river/city basins, altitude-driven frost and two-scale luminous moor, continuous field boundaries with hedgerows/lanes, exterior orchard rows and a continuous dark eastern forest. |
 
 The game remains authoritative for production geography, climate fields and
 placement. Library climate masks use synthetic coordinates; these are an art
@@ -38,28 +38,43 @@ new botanically exact olive model.
 
 ### B parameters are data
 
-`groundedRealism` in `src/lookdev/directions.ts` supplies B's palette, parcel
-size/blend, frost/moor/valley weights, crown width/value range, sea specular and
-foam limits, and haze cap. Only B receives this optional `Direction.grounding`
-record; A/C run their original material and placement branches. No global nature
-or material implementation changes are required.
+`groundedRealism` in `src/lookdev/directions.ts` supplies B's round-4 parameters.
+Only B receives the optional `Direction.grounding` record. Hex colors are sRGB;
+RGB triples below are **linear**, never converted from sRGB again. Physical
+settings use metres, converted at the gallery's **50 m per scene unit**.
 
-| Parameter | Value | Purpose |
+| Parameter | Round-4 value | Use in this study |
 | --- | --- | --- |
-| Moor / frost | `#879933` / `#bdc9bb` | Separate open northern ground from stone and alpine snow |
-| Pasture / cereal / vines | `#618537` / `#c49e4d` / `#4b642d` | Readable cultivated parcels |
-| Valley / woodland | `#748b43` / `#344c24` | Fertile eastern catchment and shaded forest floor |
-| Parcel size / blend | `3.2 × 3.8` units / `0.88` | Seeded patchwork; derivative-filtered vineyard rows |
-| Moor / frost / valley weights | `0.66` / `0.22` / `0.72` | Regional mix limits, independent of ownership |
-| Crown width / shade range | `1.15` / `0.70–1.20` | Grouped crowns with lit tops and shaded gaps; same instances |
-| Sea specular / foam multiplier | `0.30` / `0.55` | Limit glare while retaining depth, shallows and surf |
-| Fog density cap | `0.00168` | Preserve regional landscape visibility |
+| Northern ground / rock | `#819d80` / `#7f898c` | Grey rock remains separate from luminous open ground |
+| Broad moor / small clearings (linear) | `(0.46,0.60,0.12)` / `(0.54,0.67,0.12)` | Noise scales `0.22` / `0.55`, weights `0.80` / `0.95`; slope fades at `0.08–0.24` |
+| Low frost / alpine snow | `150–650 m`; summer `0.30`, winter `1.0`; north `780–1080 m`, south `1250–1500 m` | Noise-fragmented frost; independent alpine layer. Synthetic peaks do not reach every game snow band |
+| Eastern grassland / city basin / river valley | `#90b35c` / `#8fba58` / `#5fac50` | Dry climate stays grass, while actual coasts and a western desert kernel keep sand |
+| Steppe bands (linear) | `(0.20,0.37,0.075)` → `(0.49,0.53,0.15)` | Anisotropic noise `0.17 × 0.63` |
+| Cereal / pasture / olives / vines (linear) | `(0.74,0.57,0.16)` / `(0.19,0.46,0.075)` / `(0.35,0.43,0.12)` / `(0.20,0.31,0.095)` | Cereal share `0.26–0.52`, derivative-filtered 2 m vine rows |
+| Parcels / warp / blend | `340 × 245 m` / `0.30` / `0.97` | Continuous agriculture; winter reduces gain by `35%` |
+| Parcel border filter | `0.005–max(0.016,0.75 × pixel footprint)` | Same parcel lattice supplies fields, hedges and earth lanes |
+| Hedge / lane (linear) | `(0.075,0.16,0.035)` / `(0.32,0.25,0.13)` | Connected boundaries, with lane choice above parcel seed `0.88` |
+| Agriculture exclusions | Slope `0.10–0.32`, altitude `600–1000 m` | Also excludes snow, coast, rock and dense woodland |
+| Exterior orchard rows | `20 / 40 m` beyond settlement footprint, spacing ≥`18 m`, gates `36 m`, ≤`160` candidates/site | Reassign existing broadleaf trees around the castle, town and harbor; low 7 m recipe, open pasture blocks, slope/river/neighbor exclusions |
+| Dark eastern forest | Floor `#527c43`, crowns `#748f61`, light tint `12%` | Continuous floor below existing eastern tree cluster; same packed LODs |
+| Crown width / shade | `1.15` / `0.70–1.20` | Existing grouped crowns and shaded gaps |
+| Sea specular / foam / haze | `0.30` / `0.55` / `0.00168` | Unchanged from the library round-1 sync; no R4 water/light changes |
 
-No geometry, texture download, draw pass, instance count or dependency is added.
-B adds a canopy instance-color buffer bounded by 54,000 bytes in High and
-33,600 bytes in Balanced (actual accepted broadleaf counts are lower).
-The shader adds procedural climate/land-use samples; measure its GPU cost on
-consumer hardware rather than inferring it from the unchanged geometry budget.
+The western desert, river catchment, city basin and eastern forest have explicit synthetic
+centres/radii in the same data record. The game uses its public atlas and urban
+contours instead: do not copy atlas pixels or screen coordinates into this
+scene. Its river and city kernels use a smooth quadratic falloff. The library
+has no marsh atlas, live season input, ownership or gameplay reservation slots;
+`winter` is an art parameter, defaulting to summer. Existing synthetic river,
+coast, slope and settlement exclusions stand in for those host contracts.
+
+No geometry, texture download, draw pass, tree pool or dependency is added.
+Orchards reuse accepted broadleaf candidates and silhouettes, not a new botanical
+olive or fruit-tree model. They sit beyond the existing synthetic settlement
+footprints; this does not add or change walls, roads, city geometry or geography.
+The existing B canopy instance-color buffer remains bounded by 54,000 bytes High
+and 33,600 bytes Balanced. Procedural shader work must still be measured on
+consumer hardware; unchanged triangle counts are not a GPU timing guarantee.
 
 ## Boundaries and lifecycle
 
@@ -100,9 +115,9 @@ Portrait expands distance to retain the subject. Regional uses the saved
 regional direction `(0.25, 0.75, 0.66)` at a larger landscape-study distance;
 Close deliberately frames a complete castle rather than a single soldier.
 
-The contact sheets include the supplied production screenshots, with their UI,
-and the synthetic sampler. They are art-direction comparisons, not pixel-matched
-before/after claims, and the phone viewport is desktop browser emulation.
+Library contact sheets compare synthetic views only; private production
+references stay outside the public repository. The phone viewport is desktop
+browser emulation, not physical-device validation.
 
 ## Costs and quality controls
 

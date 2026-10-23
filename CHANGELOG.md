@@ -11,6 +11,7 @@ All notable changes are documented here, following Keep a Changelog.
 
 ### Changed
 
+- Sync the game-default B direction with round-4 data: grassland instead of eastern dry-mask sand, fertile river/city basins, altitude-driven frost and two-scale luminous moor, continuous agricultural parcels with hedgerows/lanes, exterior orchard rows and a dark eastern forest. Refresh both B documentation images.
 - Refine only B with northern moor/rock/frost separation, fertile eastern valley and grassland, pasture/cereal/vineyard parcels, grouped canopy light variation, restrained sea highlights/foam and lower haze.
 - Preserve A/C and the armies, wildlings and heraldry story output; reuse existing geometry, texture assets and dependencies.
 
