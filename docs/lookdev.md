@@ -8,20 +8,58 @@ flight (drag, WASD, Q/E); wheel reduces travel speed for close inspection.
 
 ## Direction and recommendation
 
-B, Grounded realism, is the recommended material/lighting target. Its subdued
-natural palette, photographic ground layers and cutout near foliage provide the
-most useful path from the present tabletop to a believable landscape. A is the
-clearest strategic-map alternative: luminous paint, softened contrast and solid
-sculpted crowns. C retains B's near foliage but adds latitude-dependent snow,
-colder northern vegetation, cloud shadow and a warmer southern grade. C should
-be optional art direction until its darker forests are approved on a phone.
+**B · Grounded realism is the chosen direction.** Its material, canopy and coast
+strategy has been ported to the game's World ×20 view and refined over three
+regional review rounds. The library now mirrors those refinements in B only;
+A and C remain available with their original output.
 
-These are original synthetic landscapes, not a geographic reconstruction of
-Westeros. Essos receives the same terrain sampling, materials, vegetation LOD,
-sea, light and authored settlement detail. No locked-state desaturation or
-quality reduction is applied. The eastern city is a neutral Free City study,
-not a reconstruction of a copyrighted screen design. No HBO art or new external
-assets are used.
+![Chosen B: regional terrain and forest](images/lookdev-b-regional.jpg)
+![Chosen B: eastern harbor and fertile valley](images/lookdev-b-east.jpg)
+
+This is an original synthetic landscape, not a geographic reconstruction. The
+eastern coast receives the same terrain, material, vegetation LOD, water, light
+and settlement detail. No ownership or locked-state input changes its beauty.
+The harbor city is a neutral procedural study. No official screen artwork or
+new external assets are used.
+
+### Refinement history
+
+| Round | Game feedback carried back into library B |
+| --- | --- |
+| 1 · Material and light port | Natural PBR ground/value range, regional vegetation, near cutout leaves, saline depth/shallows/foam and restrained atmosphere. |
+| 2 · Fertile regions | Green pasture/cereal/vineyard patchwork, grouped broadleaf canopies, fertile eastern grassland/river valley and olive-like low broadleaf silhouettes; less sea glare. |
+| 3 · Regional separation | Yellow-green northern moor between rock and light frost, stronger agricultural parcel contrast, sunlit crowns and shaded gaps, lower haze. |
+
+The game remains authoritative for production geography, climate fields and
+placement. Library climate masks use synthetic coordinates; these are an art
+study, not a replacement map or a claim of exact game-image parity. The generic
+eastern broadleaf recipe suggests orchard vegetation rather than providing a
+new botanically exact olive model.
+
+### B parameters are data
+
+`groundedRealism` in `src/lookdev/directions.ts` supplies B's palette, parcel
+size/blend, frost/moor/valley weights, crown width/value range, sea specular and
+foam limits, and haze cap. Only B receives this optional `Direction.grounding`
+record; A/C run their original material and placement branches. No global nature
+or material implementation changes are required.
+
+| Parameter | Value | Purpose |
+| --- | --- | --- |
+| Moor / frost | `#879933` / `#bdc9bb` | Separate open northern ground from stone and alpine snow |
+| Pasture / cereal / vines | `#618537` / `#c49e4d` / `#4b642d` | Readable cultivated parcels |
+| Valley / woodland | `#748b43` / `#344c24` | Fertile eastern catchment and shaded forest floor |
+| Parcel size / blend | `3.2 × 3.8` units / `0.88` | Seeded patchwork; derivative-filtered vineyard rows |
+| Moor / frost / valley weights | `0.66` / `0.22` / `0.72` | Regional mix limits, independent of ownership |
+| Crown width / shade range | `1.15` / `0.70–1.20` | Grouped crowns with lit tops and shaded gaps; same instances |
+| Sea specular / foam multiplier | `0.30` / `0.55` | Limit glare while retaining depth, shallows and surf |
+| Fog density cap | `0.00168` | Preserve regional landscape visibility |
+
+No geometry, texture download, draw pass, instance count or dependency is added.
+B adds a canopy instance-color buffer bounded by 54,000 bytes in High and
+33,600 bytes in Balanced (actual accepted broadleaf counts are lower).
+The shader adds procedural climate/land-use samples; measure its GPU cost on
+consumer hardware rather than inferring it from the unchanged geometry budget.
 
 ## Boundaries and lifecycle
 
@@ -109,11 +147,11 @@ or hidden game state. Reuse `scene/geometry/CastleMaterial.ts` and
 `realism/cities/CityMaterial.ts` for equivalent stone grain; keep their semantic
 attributes and exclusions intact.
 
-Suggested sequence: (1) behind an opt-in art flag, add uniform-driven terrain and
+The port used the following staged approach; retain it for future consumers: (1) behind an opt-in art flag, add uniform-driven terrain and
 sea settings with existing geographic inputs; (2) add instanced species/LOD and
 prewarm; (3) test castle ground contact and city entrances against production
 height data; (4) compare full game x20 in Chrome/WebKit, labels, locks and phone;
-(5) let David choose A/B/C before changing the default. Rollback is the original
+(5) retain the chosen B direction while reviewing each production region. Rollback is the original
 art flag; keep saves, rules, navigation and gameplay unchanged.
 
 The prototype's low-detail castle crenellations, rounded mountain relief and
@@ -122,19 +160,22 @@ closeups. A direction approval is separate from approval to ship the result.
 
 ## Reproduce evidence
 
-From this worktree, run commands under `nice -n 10`:
+The portable runners and environment variables are documented in
+[qa/README.md](../qa/README.md). Run commands sequentially under `nice -n 10`:
 
-```
-npx tsc --noEmit
-npm run build
-node qa/lookdev.cjs full
-node qa/lookdev.cjs video
-node qa/lookdev-sheets.cjs
+```sh
+nice -n 10 npm run typecheck
+nice -n 10 npm run build
+nice -n 10 env QA_PORT=5250 LOOKDEV_ONLY=B node qa/lookdev.cjs full
+nice -n 10 env LOOKDEV_ONLY=B node qa/lookdev-sheets.cjs
+nice -n 10 node qa/lookdev-report.cjs
+nice -n 10 npm run build -- --base=/realmforge/
 git diff --check
 ```
 
-The capture runner owns a single headless preview on 5241 through `qa/server.cjs`
-and stops its exact PID in `finally`, including failure. Chrome uses the required
-Metal flags; WebKit uses Playwright's headless engine. All screenshots are JPEG
-quality 72. Videos record the canvas for 30 seconds at 24 fps. No UI regression
-test suite is added; this is the brief's bounded evidence capture.
+The capture runner owns a single headless preview through `qa/server.cjs` and
+stops its exact PID in `finally`, including failure. Chrome uses Metal flags;
+WebKit supplies the Safari-adjacent review. All screenshot evidence is JPEG
+quality 72. Optional videos record the canvas for 30 seconds at 24 fps. The
+separate parity runner captures every protected story plus A/C at a frozen clock
+for before/after pixel comparison. No UI regression test suite is added.

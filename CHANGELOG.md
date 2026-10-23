@@ -1,6 +1,22 @@
 # Changelog
 
-## 0.1.0 — 2026-10-22
+All notable changes are documented here, following Keep a Changelog.
+
+## [Unreleased]
+
+### Added
+
+- Chosen Grounded realism B gallery captures and regional tuning documentation.
+- Portable headless look-development capture, contact-sheet, report and protected-story parity runners.
+
+### Changed
+
+- Refine only B with northern moor/rock/frost separation, fertile eastern valley and grassland, pasture/cereal/vineyard parcels, grouped canopy light variation, restrained sea highlights/foam and lower haze.
+- Preserve A/C and the armies, wildlings and heraldry story output; reuse existing geometry, texture assets and dependencies.
+
+## [0.1.0] - 2026-10-22
+
+### Added
 
 - Extract standalone procedural castles, cities, pieces, nature, props, materials, dragons, effects and tokens from Swords and Ravens.
 - Add animated instanced companies, injectable heraldry and public wildling-threat presentation.
