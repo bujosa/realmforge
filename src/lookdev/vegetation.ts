@@ -73,6 +73,7 @@ export function vegetation(d:Direction,high:boolean):{object:THREE.Group;update:
     const shellMat=new THREE.MeshStandardMaterial({map:atlas.colour,normalMap:atlas.normal,normalScale:new THREE.Vector2(.65,.65),color:d.foliage,alphaTest:.5,side:THREE.DoubleSide,roughness:1});
     const shellTrees=trees.filter(t=>!t.pine);
     const shell=new THREE.InstancedMesh(floraGroupGeometry(),shellMat,shellTrees.length);
+    if(d.grounding)shell.setColorAt(0,new THREE.Color("white"));
     shell.receiveShadow=true;shell.frustumCulled=false;object.add(shell);
     object.userData.canopy={mesh:shell,trees:shellTrees};
     disposers.push(()=>{atlas.colour.dispose();atlas.normal.dispose();});
@@ -83,15 +84,17 @@ export function vegetation(d:Direction,high:boolean):{object:THREE.Group;update:
     const canopy=object.userData.canopy as {mesh:THREE.InstancedMesh;trees:Tree[]}|undefined;
     if(canopy){let count=0;for(const t of canopy.trees){
       if(Math.hypot(t.x-camera.position.x,t.h-camera.position.y,t.z-camera.position.z)<=60)continue;
-      transform.position.set(t.x,t.h+t.scale*.52,t.z);transform.rotation.set(0,hash(t.x,t.z)*6.28,0);transform.scale.set(t.scale*.43,t.scale*.3,t.scale*.43);transform.updateMatrix();canopy.mesh.setMatrixAt(count++,transform.matrix);
-    }canopy.mesh.count=count;canopy.mesh.instanceMatrix.needsUpdate=true;}
+      transform.position.set(t.x,t.h+t.scale*.52,t.z);transform.rotation.set(0,hash(t.x,t.z)*6.28,0);transform.scale.set(t.scale*.43*(d.grounding?.crownWidth??1),t.scale*.3,t.scale*.43*(d.grounding?.crownWidth??1));transform.updateMatrix();canopy.mesh.setMatrixAt(count,transform.matrix);
+      if(d.grounding){const shade=THREE.MathUtils.lerp(...d.grounding.crownShade,noise(t.x*.8,t.z*.8));canopy.mesh.setColorAt(count,new THREE.Color(shade,shade,shade*.95));}
+      count++;
+    }canopy.mesh.count=count;canopy.mesh.instanceMatrix.needsUpdate=true;if(canopy.mesh.instanceColor)canopy.mesh.instanceColor.needsUpdate=true;}
     for(const {mesh,data,detail} of batches){
       let packed=0;data.forEach((t,i)=>{
         const distance=Math.hypot(t.x-camera.position.x,t.h-camera.position.y,t.z-camera.position.z);
         const near=high&&distance<18;if(near!==detail||(!t.pine&&distance>60))return;
         transform.position.set(t.x,t.h-.03,t.z);transform.rotation.set(0,hash(i,8)*Math.PI*2,0);
-        transform.scale.set(t.scale,t.scale*(t.x>26?.72:1),t.scale);transform.updateMatrix();mesh.setMatrixAt(packed,transform.matrix);
-        const tint=.80+hash(i,11)*.32;mesh.setColorAt(packed++,new THREE.Color(tint,tint,tint*.95));
+        transform.scale.set(t.scale*(d.grounding?.crownWidth??1),t.scale*(t.x>26?.72:1),t.scale*(d.grounding?.crownWidth??1));transform.updateMatrix();mesh.setMatrixAt(packed,transform.matrix);
+        const tint=d.grounding?THREE.MathUtils.lerp(...d.grounding.crownShade,noise(t.x*.8,t.z*.8)):.80+hash(i,11)*.32;mesh.setColorAt(packed++,new THREE.Color(tint,tint,tint*.95));
       });mesh.count=packed;mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor!.needsUpdate=true;
     }
   };

@@ -3,7 +3,18 @@ import * as THREE from "three";
 export type Look = "A" | "B" | "C";
 export type Quality = "High" | "Balanced";
 export type Pose = "World x20" | "Regional" | "Close" | "Essos" | "Free flight";
+/** Chosen B calibration, carried back from three regional game review rounds.
+ * Coordinates describe this synthetic study, never production geography. */
+export const groundedRealism = {
+  moor: "#879933", frost: "#bdc9bb", pasture: "#618537", cereal: "#c49e4d",
+  vines: "#4b642d", valley: "#748b43", woodland: "#344c24",
+  parcelSize: [3.2, 3.8] as const, parcelBlend: 0.88, frostStrength: 0.22,
+  moorStrength: 0.66, valleyStrength: 0.72, crownWidth: 1.15,
+  crownShade: [0.70, 1.20] as const, seaSpecular: 0.30, foamStrength: 0.55,
+  hazeLimit: 0.00168,
+};
 export interface Direction {
+  grounding?: typeof groundedRealism;
   name: string; subtitle: string; grass: string; north: string; dry: string;
   rock: string; sand: string; snow: string; sea: string; shallow: string;
   sky: string; horizon: string; sun: string; sunPower: number; ambient: number;
@@ -11,7 +22,7 @@ export interface Direction {
 }
 export const directions: Record<Look, Direction> = {
   A: { name:"Painterly realism", subtitle:"A living atlas · luminous valleys, quiet seas", grass:"#738a43",north:"#587563",dry:"#b7a563",rock:"#93978d",sand:"#d5c28f",snow:"#e4ebdf",sea:"#194b5d",shallow:"#65a89d",sky:"#a3c2c6",horizon:"#d9d9bf",sun:"#fff0cf",sunPower:2.5,ambient:1.75,exposure:1.05,fog:0.0025,photo:0.10,foliage:"#436038" },
-  B: { name:"Grounded realism", subtitle:"Stone, salt and living forest · natural afternoon",grass:"#68794a",north:"#50645a",dry:"#a3915e",rock:"#858786",sand:"#bdb38e",snow:"#d6dedb",sea:"#103c50",shallow:"#558f87",sky:"#92b1bd",horizon:"#d7d8ce",sun:"#ffedce",sunPower:3.1,ambient:1.2,exposure:1.0,fog:0.0035,photo:0.92,foliage:"#344b34" },
+  B: { grounding:groundedRealism, name:"Grounded realism", subtitle:"Stone, salt and living forest · natural afternoon",grass:"#748b46",north:"#67774b",dry:"#af9c61",rock:"#858786",sand:"#bdb38e",snow:"#d6dedb",sea:"#103c50",shallow:"#558f87",sky:"#92b1bd",horizon:"#d7d8ce",sun:"#ffedce",sunPower:3.1,ambient:1.2,exposure:1.0,fog:groundedRealism.hazeLimit,photo:0.92,foliage:"#344b34" },
   C: { name:"Series mood", subtitle:"The cold North, the golden South · weather over the strait",grass:"#73734a",north:"#3d5754",dry:"#b59b56",rock:"#697675",sand:"#b9ac82",snow:"#d6e0dc",sea:"#183c46",shallow:"#527b77",sky:"#607984",horizon:"#bdc3bc",sun:"#ffd49b",sunPower:2.8,ambient:1.0,exposure:0.94,fog:0.0055,photo:0.65,foliage:"#344b40" },
 };
 export const hash = (x: number, z: number): number => {

@@ -5,6 +5,7 @@ Realmforge is a source-first TypeScript and three.js library for procedural medi
 ![Procedural castle](docs/images/castle.jpg)
 ![Animated companies](docs/images/armies.jpg)
 ![Landscape exploration](docs/images/landscape.jpg)
+![Grounded landscape direction](docs/images/lookdev-b-regional.jpg)
 ![Procedural utility props](docs/images/props.jpg)
 
 ## Quick start
@@ -26,6 +27,8 @@ The gallery is also prepared for [GitHub Pages](https://bujosa.github.io/realmfo
 Search the catalogue, open a study and drag to orbit, scroll to zoom or double-click a surface to approach. The phone catalogue opens in a drawer. Inspect architecture, seed, tint, variant, LOD and quality in the component controls. Stage controls include turntable, wireframe, bounds, grid, ground, light, fog and pixel ratio. **Copy QA link** preserves the study and control values in its URL.
 
 Press **E** for free flight, **G** for a street-level walk, **Escape** for orbit. Drag to look; WASD/arrows move; Q/E move down/up; Shift accelerates; the wheel adjusts speed. Touch uses the movement pad and drag/pinch gestures. The navigation selector also works without shortcuts. Camera pose and speed are not serialized. Walking uses approximate geometry collision, not a game physics engine. See [exploration controls and limits](docs/exploration.md).
+
+Open `#lookdev/landscape` to compare A/B/C, High/Balanced and World/Regional/Close/Eastern coast camera studies. B is the chosen Grounded realism direction, refined through the game port; see [parameters and review history](docs/lookdev.md).
 
 Open `#qa` for the complete sequential thumbnail sheet; select any thumbnail to inspect it. [Gallery authoring contract](docs/gallery.md).
 
@@ -52,6 +55,7 @@ The package export resolves TypeScript source; consumers must compile it. Builde
 
 | Domain | Contents | Documentation |
 |---|---|---|
+| Look development | Three live art directions; chosen B with regional moor, fertile patchwork, grouped forest canopies and restrained sea/haze | [Landscape look development](docs/lookdev.md) |
 | Explore | 26 inhabited seat/city studies and a river-to-coast landscape | [Explore](docs/exploration.md) |
 | Pieces | Original footman, knight, siege engine, ship and dragon references | [Pieces](docs/pieces.md) |
 | Armies | Instanced companies, ten motion states, terrain/heraldry studies and board budgets | [Armies](docs/armies.md) |
