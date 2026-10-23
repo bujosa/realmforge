@@ -3,15 +3,33 @@ import * as THREE from "three";
 export type Look = "A" | "B" | "C";
 export type Quality = "High" | "Balanced";
 export type Pose = "World x20" | "Regional" | "Close" | "Essos" | "Free flight";
-/** Chosen B calibration, carried back from three regional game review rounds.
- * Coordinates describe this synthetic study, never production geography. */
+/** Game-default B calibration after the fourth regional review.
+ * Linear RGB triples are already linear; hex strings are sRGB.
+ * All distances are metres, adapted to this 50 m/unit synthetic study. */
 export const groundedRealism = {
-  moor: "#879933", frost: "#bdc9bb", pasture: "#618537", cereal: "#c49e4d",
-  vines: "#4b642d", valley: "#748b43", woodland: "#344c24",
-  parcelSize: [3.2, 3.8] as const, parcelBlend: 0.88, frostStrength: 0.22,
-  moorStrength: 0.66, valleyStrength: 0.72, crownWidth: 1.15,
-  crownShade: [0.70, 1.20] as const, seaSpecular: 0.30, foamStrength: 0.55,
-  hazeLimit: 0.00168,
+  metresPerUnit: 50,
+  moor: [0.46, 0.60, 0.12] as const, clearing: [0.54, 0.67, 0.12] as const,
+  frost: "#bdc9bb", pasture: [0.19, 0.46, 0.075] as const,
+  cereal: [0.74, 0.57, 0.16] as const, olives: [0.35, 0.43, 0.12] as const,
+  vines: [0.20, 0.31, 0.095] as const, hedge: [0.075, 0.16, 0.035] as const,
+  lane: [0.32, 0.25, 0.13] as const,
+  steppe: [[0.20, 0.37, 0.075], [0.49, 0.53, 0.15]] as const,
+  grassland: "#90b35c", basin: "#8fba58", valley: "#5fac50", woodland: "#527c43",
+  parcelMetres: [340, 245] as const, parcelWarp: 0.30, parcelBlend: 0.97,
+  parcelEdge: [0.005, 0.016, 0.75] as const, cerealFraction: [0.26, 0.52] as const,
+  vineRowMetres: 2, winter: 0, winterFarmLoss: 0.35,
+  frostMetres: [150, 650] as const, frostStrength: 0.30,
+  snowNorthMetres: [780, 1080] as const, snowSouthMetres: [1250, 1500] as const,
+  farmMetres: [600, 1000] as const, moorStrength: 0.80, clearingStrength: 0.95,
+  valleyStrength: 0.85, crownWidth: 1.15, crownShade: [0.70, 1.20] as const,
+  forestCrown: "#748f61", forestCrownLight: 0.12,
+  orchardMetres: { rows: [20, 40] as const, spacing: 18, gate: 36, height: 7, candidates: 160 },
+  // Synthetic counterparts of a river catchment, a city basin and eastern forest.
+  westernDesert: { centre: [-34, 17] as const, radius: [10, 12] as const },
+  riverBasin: { centre: [49, -3] as const, radius: [9, 24] as const },
+  cityBasin: { centre: [47, 5] as const, radius: [14, 15.6] as const },
+  easternForest: { centre: [57, -12] as const, radius: [10, 8] as const },
+  seaSpecular: 0.30, foamStrength: 0.55, hazeLimit: 0.00168,
 };
 export interface Direction {
   grounding?: typeof groundedRealism;
@@ -22,7 +40,7 @@ export interface Direction {
 }
 export const directions: Record<Look, Direction> = {
   A: { name:"Painterly realism", subtitle:"A living atlas · luminous valleys, quiet seas", grass:"#738a43",north:"#587563",dry:"#b7a563",rock:"#93978d",sand:"#d5c28f",snow:"#e4ebdf",sea:"#194b5d",shallow:"#65a89d",sky:"#a3c2c6",horizon:"#d9d9bf",sun:"#fff0cf",sunPower:2.5,ambient:1.75,exposure:1.05,fog:0.0025,photo:0.10,foliage:"#436038" },
-  B: { grounding:groundedRealism, name:"Grounded realism", subtitle:"Stone, salt and living forest · natural afternoon",grass:"#748b46",north:"#67774b",dry:"#af9c61",rock:"#858786",sand:"#bdb38e",snow:"#d6dedb",sea:"#103c50",shallow:"#558f87",sky:"#92b1bd",horizon:"#d7d8ce",sun:"#ffedce",sunPower:3.1,ambient:1.2,exposure:1.0,fog:groundedRealism.hazeLimit,photo:0.92,foliage:"#344b34" },
+  B: { grounding:groundedRealism, name:"Grounded realism", subtitle:"Stone, salt and living forest · natural afternoon",grass:"#8abf58",north:"#819d80",dry:"#af9c61",rock:"#7f898c",sand:"#bdb38e",snow:"#d6dedb",sea:"#103c50",shallow:"#558f87",sky:"#92b1bd",horizon:"#d7d8ce",sun:"#ffedce",sunPower:3.1,ambient:1.2,exposure:1.0,fog:groundedRealism.hazeLimit,photo:0.92,foliage:"#344b34" },
   C: { name:"Series mood", subtitle:"The cold North, the golden South · weather over the strait",grass:"#73734a",north:"#3d5754",dry:"#b59b56",rock:"#697675",sand:"#b9ac82",snow:"#d6e0dc",sea:"#183c46",shallow:"#527b77",sky:"#607984",horizon:"#bdc3bc",sun:"#ffd49b",sunPower:2.8,ambient:1.0,exposure:0.94,fog:0.0055,photo:0.65,foliage:"#344b40" },
 };
 export const hash = (x: number, z: number): number => {
