@@ -19,9 +19,9 @@ withServer(async base=>{
    const context=await browser.newContext({viewport,hasTouch:form==='phone'});try{
     const page=await context.newPage();page.on('pageerror',e=>result.errors.push({engine,form,error:e.stack}));page.on('console',m=>{if(m.type()==='error'||/GL_INVALID|WebGL.*error|shader error/i.test(m.text()))result.errors.push({engine,form,error:m.text()});});
     await page.addInitScript(()=>{window.__seatPrograms=0;for(const proto of[WebGLRenderingContext.prototype,WebGL2RenderingContext.prototype]){const original=proto.createProgram;proto.createProgram=function(...args){window.__seatPrograms++;return original.apply(this,args);};}});
-    for(const kind of mode==='controls'?[]:['capital','island','north'])for(const variant of ['video','inspect','reference'].includes(mode)?['A']:['A','B']){
+    for(const kind of mode==='controls'?[]:mode==='north'?['north']:['capital','island','north'])for(const variant of ['video','inspect','reference'].includes(mode)?['B']:['A','B']){
      await open(page,base,kind,variant);
-     if(engine==='chrome'&&form==='desktop'&&variant==='A')await page.screenshot({path:path.join(evidence,`${kind}-gallery.jpg`),type:'jpeg',quality:72});
+     if(engine==='chrome'&&form==='desktop'&&variant==='B')await page.screenshot({path:path.join(evidence,`${kind}-gallery.jpg`),type:'jpeg',quality:72});
      await page.addStyleTag({content:immersive});await page.waitForTimeout(250);
      if(mode==='video'){
       const data=await page.evaluate(async()=>{const stream=document.querySelector('#stage canvas').captureStream(24),recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:4500000}),parts=[],times=[],calls=[],triangles=[];const initialPrograms=window.__seatPrograms;let last=performance.now(),raf;const sample=t=>{times.push(t-last);last=t;const stats=window.__realmforge.stats();calls.push(stats.calls);triangles.push(stats.triangles);raf=requestAnimationFrame(sample);};raf=requestAnimationFrame(sample);recorder.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};const done=new Promise(r=>recorder.onstop=r);recorder.start();window.__seats.startOrbit();await new Promise(r=>setTimeout(r,20000));recorder.stop();await done;cancelAnimationFrame(raf);stream.getTracks().forEach(t=>t.stop());const bytes=new Uint8Array(await new Blob(parts).arrayBuffer());let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));times.shift();times.sort((a,b)=>a-b);return {data:btoa(s),metrics:{frameP95:times[Math.floor(times.length*.95)],maxDraws:Math.max(...calls),maxTriangles:Math.max(...triangles),newPrograms:window.__seatPrograms-initialPrograms,samples:times.length}};});fs.writeFileSync(path.join(evidence,`${kind}-orbit-20s.webm`),Buffer.from(data.data,'base64'));result.runs.push({kind,variant,engine,form,...data.metrics});console.log(`${kind}: orbit saved, +${data.metrics.newPrograms} programs`);continue;
@@ -40,6 +40,11 @@ withServer(async base=>{
     }
     if(mode==='full'||mode==='controls'){
      // Exercise the visible controls and disposal in the real gallery, without screenshot assertions.
+     for(const kind of ['capital','island','north']){
+      await page.goto(`${base}#seats/${kind}?view.grid=false`);
+      await page.waitForFunction(()=>window.__seats?.stats().ready);
+      (result.defaults ||= []).push({engine,form,kind,...await page.evaluate(()=>({variant:window.__seats.stats().variant}))});
+     }
      await open(page,base,'north','A');
      await page.evaluate(()=>document.querySelectorAll('style').forEach(s=>{if(s.textContent.includes('#app{display:block!important}'))s.remove();}));
      await page.getByLabel('Seat variant',{exact:true}).selectOption('B · Long northern ward');
